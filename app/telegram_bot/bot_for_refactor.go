@@ -11,7 +11,6 @@ import (
 	"strings"
 )
 
-var waitingForFile map[int64]bool // Map для отслеживания ожидания файла в чате (chatID -> bool)
 var serviceNum int
 
 func getServices() []string {
@@ -19,6 +18,7 @@ func getServices() []string {
 		"Al Dar",
 		"Luna 22",
 		"Condor",
+		"Siadah",
 	}
 
 	return services
@@ -40,8 +40,6 @@ func GetBot() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
-
-	waitingForFile = make(map[int64]bool)
 
 	for update := range updates {
 		if update.Message == nil {
@@ -89,6 +87,14 @@ func GetBot() {
 
 				//waitingForFile[chatID] = true // Установка флага ожидания файла
 				serviceNum = 3
+			case 4:
+				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Siadah")
+				bot.Send(msg)
+				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
+				bot.Send(msg)
+
+				//waitingForFile[chatID] = true // Установка флага ожидания файла
+				serviceNum = 4
 			default:
 				msg := tgbotapi.NewMessage(chatID, "Некорректный выбор сервиса")
 				bot.Send(msg)
@@ -104,6 +110,8 @@ func GetBot() {
 				getServiceLuna22(update.Message, bot)
 			case 3:
 				getServiceCondor(update.Message, bot)
+			case 4:
+				getServiceSiadah(update.Message, bot)
 			default:
 				msg := tgbotapi.NewMessage(chatID, "Упс")
 				bot.Send(msg)

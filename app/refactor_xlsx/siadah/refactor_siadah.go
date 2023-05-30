@@ -1,4 +1,4 @@
-package luma_22
+package siadah
 
 import (
 	"bytes"
@@ -46,13 +46,13 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	setColumnValues(newXlsxFile, cols[1], "A")    //number
-	setColumnValues(newXlsxFile, cols[6], "B")    //price
-	setColumnValues(newXlsxFile, cols[5], "C")    //Square
+	setColumnValues(newXlsxFile, cols[2], "A")    //number
+	setColumnValues(newXlsxFile, cols[7], "B")    //price
+	setColumnValues(newXlsxFile, cols[4], "C")    //Square
 	setColumnValues(newXlsxFile, []string{}, "D") //height
 	setColumnValues(newXlsxFile, []string{}, "E") //type
 	setColumnValues(newXlsxFile, cols[3], "F")    //layout
-	setColumnValues(newXlsxFile, cols[4], "G")    //views
+	setColumnValues(newXlsxFile, cols[8], "G")    //views
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 
@@ -61,7 +61,7 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		return nil, err3
 	}
 
-	refactorFile, errRefactor := cmd.RemoveFirstRowFromCSV(buffer)
+	refactorFile, errRefactor := cmd.RemoveAnyRowFromCSV(buffer, 4)
 
 	if errRefactor != nil {
 		LogError("%v", errRefactor)

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/csv"
 	"fmt"
+	"genieMap/cmd"
 	"github.com/xuri/excelize/v2"
 	"io/ioutil"
 	"log"
@@ -64,10 +65,13 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, cols[2], "A")
 	setColumnValues(newXlsxFile, cols[11], "B")
 	setColumnValues(newXlsxFile, cols[10], "C")
-	setColumnValues(newXlsxFile, cols[8], "D")
+	setColumnValues(newXlsxFile, []string{}, "D")
 	setColumnValues(newXlsxFile, cols[4], "E")
 	setColumnValues(newXlsxFile, cols[5], "F")
 	setColumnValues(newXlsxFile, cols[6], "G")
+
+	cmd.ReplaceFieldInXLSX(newXlsxFile)
+	cmd.ReplaceWhateverFieldInXLSX(newXlsxFile, 5)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 
