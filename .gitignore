@@ -1,2 +1,5 @@
 # Local enviroment
 .env
+
+# local logs
+refactor.log

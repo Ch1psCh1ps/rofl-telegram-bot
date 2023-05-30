@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	telegram_bot.StartNewNewBot()
+	telegram_bot.GetBot()
 }
