@@ -508,7 +508,7 @@ package telegram_bot
 //	return emptyCells
 //}
 //
-//type Cell struct {
+//type Cell structures {
 //	row int
 //	col int
 //}

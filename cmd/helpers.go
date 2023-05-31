@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/xuri/excelize/v2"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -254,4 +255,36 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, error) {
+	content, err := ioutil.ReadAll(buffer)
+	if err != nil {
+		return nil, err
+	}
+
+	reader := csv.NewReader(bytes.NewReader(content))
+
+	rows, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(rows) > 0 {
+		rows[0] = values
+	}
+
+	newBuffer := new(bytes.Buffer)
+	writer := csv.NewWriter(newBuffer)
+
+	for _, row := range rows {
+		err1 := writer.Write(row)
+		if err1 != nil {
+			return nil, err1
+		}
+	}
+
+	writer.Flush()
+
+	return newBuffer, nil
 }
