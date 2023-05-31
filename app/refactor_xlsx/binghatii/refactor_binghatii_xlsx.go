@@ -78,6 +78,7 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	buf, errFirstRow := cmd.UpdateFirstRowInCSV(refactorFile, _struct.GetNameFirstRow())
 	if errFirstRow != nil {
 		LogError("Ошибка при добавлении строки", errFirstRow)
+
 		return nil, errFirstRow
 	}
 
