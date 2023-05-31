@@ -51,12 +51,14 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
 		LogError("Ошибка при конвертации XLSX в CSV: %v", err3)
+
 		return nil, err3
 	}
 
 	buffer, errFirstRow := cmd.UpdateFirstRowInCSV(buf, _struct.GetNameFirstRow())
 	if errFirstRow != nil {
 		LogError("Ошибка при добавлении строки", errFirstRow)
+
 		return nil, errFirstRow
 	}
 
