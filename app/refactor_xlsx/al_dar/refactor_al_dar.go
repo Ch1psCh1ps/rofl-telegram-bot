@@ -20,35 +20,9 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		return nil, convertErr
 	}
 
-	//fileContent, downloadFileErr := downloadFile(path)
-	//fmt.Println(path)
-	//if downloadFileErr != nil {
-	//	LogError("Ошибка при загрузке файла: %v", downloadFileErr)
-	//	return nil, downloadFileErr
-	//}
+	sheetName := filecsv.GetSheetName(0)
 
-	//filecsv, convertErr := ConvertCSVtoXLSX(fileContent)
-	//if convertErr != nil {
-	//	LogError("Ошибка при конвертации CSV в XLSX: %v", convertErr)
-	//	return nil, convertErr
-	//}
-	//
-	//// Сохранение файла XLSX
-	//saveErr := SaveXLSXFile(filecsv, "output.xlsx")
-	//if saveErr != nil {
-	//	LogError("Ошибка при сохранении файла XLSX: %v", saveErr)
-	//	return nil, saveErr
-	//}
-
-	//data := GetDataFromBytes(fileContent)
-	//
-	//defer func() {
-	//	if err := data.Close(); err != nil {
-	//		LogError("%v", err)
-	//	}
-	//}()
-
-	cols, sheetErr := GetSheet(filecsv, "Sheet1")
+	cols, sheetErr := GetSheet(filecsv, sheetName)
 	if sheetErr != nil {
 		LogError("Ошибка при получении листа из файла XLSX: %v", sheetErr)
 		return nil, sheetErr
@@ -79,12 +53,6 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		LogError("Ошибка при конвертации XLSX в CSV: %v", err3)
 		return nil, err3
 	}
-
-	//buffer := new(bytes.Buffer)
-	//if err := newXlsxFile.Write(buffer); err != nil {
-	//	LogError("%v", err)
-	//	return nil, err
-	//}
 
 	return buf, nil
 }

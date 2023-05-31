@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -52,6 +53,8 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, cols[2], "E")    //type
 	setColumnValues(newXlsxFile, cols[3], "F")    //layout
 	setColumnValues(newXlsxFile, cols[6], "G")    //views
+
+	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 
@@ -119,4 +122,60 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	// Обрабатываем каждый лист
+	for _, sheet := range sheets {
+		// Получаем все строки в листе
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Инициализируем индекс строки
+		rowIndex := 1
+
+		// Перебираем каждую строку
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			// Перебираем каждую ячейку в строке
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					// Заменяем значение ячейки на замену
+					word := strings.Replace(row[colIndex], "BUGA-", "", 1)
+					//word := strings.Fields(row[colIndex])
+					row[colIndex] = word
+
+					// Получаем имя столбца на основе индекса столбца
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					// Обновляем значение ячейки в листе
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
 }
