@@ -13,6 +13,10 @@ import (
 
 var serviceNum int
 
+type BotState struct {
+	ServiceNum int
+}
+
 func getServices() []string {
 	services := []string{
 		"Al Dar",
@@ -20,14 +24,45 @@ func getServices() []string {
 		"Condor",
 		"Siadah",
 		"Binghatii",
+		"Deyaar",
 	}
 
 	return services
 }
 
+func getServiceName(serviceNumber int) string {
+	services := getServices()
+	return services[serviceNumber-1]
+}
+
+func isValidService(serviceNumber int) bool {
+	services := getServices()
+	return serviceNumber >= 1 && serviceNumber <= len(services)
+}
+
+func getServiceFileFormat(serviceNumber int) string {
+	switch serviceNumber {
+	case 1:
+		return "CSV"
+	case 2:
+		return "XLSX"
+	case 3:
+		return "XLSX"
+	case 4:
+		return "XLSX"
+	case 5:
+		return "XLSX"
+	case 6:
+		return "XLSX"
+	default:
+		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
+	}
+}
+
 func GetBot() {
 	cmd.LoadEnv()
 	apiToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+	//apiToken := os.Getenv("TELEGRAM_BOT_TOKEN_MINION")
 	bot, err := tgbotapi.NewBotAPI(apiToken)
 	if err != nil {
 		log.Panic(err)
@@ -41,6 +76,8 @@ func GetBot() {
 	u.Timeout = 60
 
 	updates := bot.GetUpdatesChan(u)
+
+	state := &BotState{} // Состояние бота
 
 	for update := range updates {
 		if update.Message == nil {
@@ -57,70 +94,51 @@ func GetBot() {
 				bot.Send(msg)
 
 				sendServiceList(bot, chatID)
+			case "stop":
+				msg := tgbotapi.NewMessage(chatID, "Бот прекратил ответы на команды")
+				bot.Send(msg)
+				continue //
 			}
 		}
 
 		if isServiceNumber(message) {
 			serviceNumber, _ := strconv.Atoi(message)
 
-			switch serviceNumber {
-			case 1:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Al Dar")
-				bot.Send(msg)
-				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате CSV")
+			if isValidService(serviceNumber) {
+				state.ServiceNum = serviceNumber
+
+				serviceName := getServiceName(serviceNumber)
+				msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Вы выбрали сервис %s", serviceName))
 				bot.Send(msg)
 
-				serviceNum = 1
-			case 2:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Luma22")
+				fileFormat := getServiceFileFormat(serviceNumber)
+				msg = tgbotapi.NewMessage(chatID, fmt.Sprintf("Пришлите файл в формате %s", fileFormat))
 				bot.Send(msg)
-				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
-				bot.Send(msg)
-
-				serviceNum = 2
-			case 3:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Condor")
-				bot.Send(msg)
-				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
-				bot.Send(msg)
-
-				serviceNum = 3
-			case 4:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Siadah")
-				bot.Send(msg)
-				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
-				bot.Send(msg)
-
-				serviceNum = 4
-			case 5:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Binghatii")
-				bot.Send(msg)
-				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
-				bot.Send(msg)
-
-				serviceNum = 5
-			default:
+			} else {
 				msg := tgbotapi.NewMessage(chatID, "Некорректный выбор сервиса")
 				bot.Send(msg)
 			}
 		}
 
 		if update.Message.Document != nil {
-
-			switch serviceNum {
-			case 1:
-				getServiceAlDar(update.Message, bot)
-			case 2:
-				getServiceLuma22(update.Message, bot)
-			case 3:
-				getServiceCondor(update.Message, bot)
-			case 4:
-				getServiceSiadah(update.Message, bot)
-			case 5:
-				getServiceBinghatii(update.Message, bot)
-			default:
+			if state.ServiceNum == 0 {
 				msg := tgbotapi.NewMessage(chatID, "Сначала напишите номер сервиса")
 				bot.Send(msg)
+			} else {
+				switch state.ServiceNum {
+				case 1:
+					getServiceAlDar(update.Message, bot)
+				case 2:
+					getServiceLuma22(update.Message, bot)
+				case 3:
+					getServiceCondor(update.Message, bot)
+				case 4:
+					getServiceSiadah(update.Message, bot)
+				case 5:
+					getServiceBinghatii(update.Message, bot)
+				case 6:
+					getServiceDeyaar(update.Message, bot)
+				}
 			}
 		}
 	}
@@ -158,7 +176,7 @@ func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer, f
 }
 
 func errMsg(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Требуется отправить файл в формате CSV")
+	msg := tgbotapi.NewMessage(chatID, "Требуется отправить файл")
 	bot.Send(msg)
 }
 
