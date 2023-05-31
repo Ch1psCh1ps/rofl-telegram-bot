@@ -130,14 +130,6 @@ func RemoveAnyRowFromCSV(buffer *bytes.Buffer, rowForRemove int) (*bytes.Buffer,
 	return newBuffer, nil
 }
 
-func ReplaceString(input string) string {
-	lastUnderscoreIndex := strings.LastIndex(input, "_")
-	if lastUnderscoreIndex >= 0 && lastUnderscoreIndex < len(input)-1 {
-		return input[lastUnderscoreIndex+1:]
-	}
-	return input
-}
-
 func ReplaceFieldInXLSX(file *excelize.File) error {
 	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
@@ -255,6 +247,16 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func RoundString(input string) (string, error) {
+	value, err := strconv.ParseFloat(input, 64)
+	if err != nil {
+		return input, err
+	}
+
+	rounded := fmt.Sprintf("%.2f", value)
+	return rounded, nil
 }
 
 func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, error) {
