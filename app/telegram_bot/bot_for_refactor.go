@@ -19,6 +19,7 @@ func getServices() []string {
 		"Luna 22",
 		"Condor",
 		"Siadah",
+		"Binghatii",
 	}
 
 	return services
@@ -69,15 +70,13 @@ func GetBot() {
 				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате CSV")
 				bot.Send(msg)
 
-				//waitingForFile[chatID] = true // Установка флага ожидания файла
 				serviceNum = 1
 			case 2:
-				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Luna")
+				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Luma22")
 				bot.Send(msg)
 				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
 				bot.Send(msg)
 
-				//waitingForFile[chatID] = true // Установка флага ожидания файла
 				serviceNum = 2
 			case 3:
 				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Condor")
@@ -85,7 +84,6 @@ func GetBot() {
 				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
 				bot.Send(msg)
 
-				//waitingForFile[chatID] = true // Установка флага ожидания файла
 				serviceNum = 3
 			case 4:
 				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Siadah")
@@ -93,8 +91,14 @@ func GetBot() {
 				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
 				bot.Send(msg)
 
-				//waitingForFile[chatID] = true // Установка флага ожидания файла
 				serviceNum = 4
+			case 5:
+				msg := tgbotapi.NewMessage(chatID, "Вы выбрали сервис Binghatii")
+				bot.Send(msg)
+				msg = tgbotapi.NewMessage(chatID, "Пришлите файл в формате XLSX")
+				bot.Send(msg)
+
+				serviceNum = 5
 			default:
 				msg := tgbotapi.NewMessage(chatID, "Некорректный выбор сервиса")
 				bot.Send(msg)
@@ -107,16 +111,17 @@ func GetBot() {
 			case 1:
 				getServiceAlDar(update.Message, bot)
 			case 2:
-				getServiceLuna22(update.Message, bot)
+				getServiceLuma22(update.Message, bot)
 			case 3:
 				getServiceCondor(update.Message, bot)
 			case 4:
 				getServiceSiadah(update.Message, bot)
+			case 5:
+				getServiceBinghatii(update.Message, bot)
 			default:
-				msg := tgbotapi.NewMessage(chatID, "Упс")
+				msg := tgbotapi.NewMessage(chatID, "Сначала напишите номер сервиса")
 				bot.Send(msg)
 			}
-			//waitingForFile[chatID] = false // Сброс флага ожидания файла
 		}
 	}
 }
@@ -132,19 +137,6 @@ func isServiceNumber(message string) bool {
 	return correctNumber
 }
 
-func getServiceResponse(serviceNumber int) string {
-	switch serviceNumber {
-	case 1:
-		return "Вы выбрали сервис №1"
-	case 2:
-		return "Вы выбрали сервис №2"
-	case 3:
-		return "Вы выбрали сервис №3"
-	default:
-		return "Некорректный выбор сервиса"
-	}
-}
-
 func sendProcessingMessage(bot *tgbotapi.BotAPI, chatID int64) {
 	msg := tgbotapi.NewMessage(chatID, "Сейчас сделаю обновленный файл 🥰")
 	bot.Send(msg)
@@ -155,9 +147,9 @@ func sendUpdateMessage(bot *tgbotapi.BotAPI, chatID int64) {
 	bot.Send(msg)
 }
 
-func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer) {
+func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer, fileName string) {
 	xlsxConfig := tgbotapi.FileBytes{
-		Name:  "refactor_available_units.csv",
+		Name:  fileName + ".csv",
 		Bytes: xlsxBuffer.Bytes(),
 	}
 
