@@ -132,18 +132,14 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
-	// Обрабатываем каждый лист
 	for _, sheet := range sheets {
-		// Получаем все строки в листе
 		rows, err := file.Rows(sheet)
 		if err != nil {
 			return err
 		}
 
-		// Инициализируем индекс строки
 		rowIndex := 1
 
-		// Перебираем каждую строку
 		for rows.Next() {
 			row, err2 := rows.Columns()
 			if err2 != nil {
@@ -152,21 +148,17 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			colIndex := indexOfCell
 
-			// Перебираем каждую ячейку в строке
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					// Заменяем значение ячейки на замену
 					word1 := strings.Split(cellValue, " ")
 					word := word1[len(word1)-1]
 					row[colIndex] = word
 
-					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
 					if err1 != nil {
 						return err1
 					}
 
-					// Обновляем значение ячейки в листе
 					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
 					if err1 != nil {
 						return err1
@@ -174,8 +166,6 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					break
 				}
 			}
-
-			// Увеличиваем индекс строки
 			rowIndex++
 		}
 	}
@@ -184,22 +174,16 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 }
 
 func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
-	// Обрабатываем каждый лист
 	for _, sheet := range sheets {
-		// Получаем все строки в листе
 		rows, err := file.Rows(sheet)
 		if err != nil {
 			return err
 		}
 
-		// Инициализируем индекс строки
 		rowIndex := 1
 
-		// Перебираем каждую строку
 		for rows.Next() {
 			row, err2 := rows.Columns()
 			if err2 != nil {
@@ -208,21 +192,17 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			colIndex := indexOfCell
 
-			// Перебираем каждую ячейку в строке
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					// Заменяем значение ячейки на замену
 					word1 := strings.Split(cellValue, " ")
 					word := word1[0] + "BR"
 					row[colIndex] = word
 
-					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
 					if err1 != nil {
 						return err1
 					}
 
-					// Обновляем значение ячейки в листе
 					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
 					if err1 != nil {
 						return err1
@@ -230,8 +210,6 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					break
 				}
 			}
-
-			// Увеличиваем индекс строки
 			rowIndex++
 		}
 	}
