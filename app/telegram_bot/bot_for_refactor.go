@@ -25,6 +25,7 @@ func getServices() []string {
 		"Siadah",
 		"Binghatii",
 		"Deyaar",
+		"Emaar",
 	}
 
 	return services
@@ -138,6 +139,8 @@ func GetBot() {
 					getServiceBinghatii(update.Message, bot)
 				case 6:
 					getServiceDeyaar(update.Message, bot)
+				case 7:
+					getServiceEmaar(update.Message, bot)
 				}
 			}
 		}
