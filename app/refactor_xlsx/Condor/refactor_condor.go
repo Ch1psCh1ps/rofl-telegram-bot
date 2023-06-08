@@ -22,25 +22,15 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		return nil, downloadFileErr
 	}
 
-	//err := ioutil.WriteFile("example.xlsx", fileContent, 0644)
-	//if err != nil {
-	//	fmt.Println("Ошибка записи файла:", err)
-	//}
-
 	data := GetDataFromBytes(fileContent)
-	//data, _ := GetDataFromFile("example.xlsx")
 
 	sheetName := data.GetSheetName(0)
 	cols, sheetErr := data.GetCols(sheetName)
-	//cols, sheetErr := GetSheet(data, sheetName)
-	//if sheetErr != nil {
-	//	LogError("Ошибка при получении листа из файла XLSX: %v", sheetErr)
-	//	cols, sheetErr = GetSheet(data, "Sheet1")
+
 	if sheetErr != nil {
 		LogError("Ошибка при получении листа из файла XLSX: %v", sheetErr)
 		return nil, sheetErr
 	}
-	//}
 
 	defer func() {
 		if err := data.Close(); err != nil {
@@ -58,13 +48,12 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 
 	setColumnValues(newXlsxFile, cols[0], "A")    //number
 	setColumnValues(newXlsxFile, cols[8], "B")    //price
-	setColumnValues(newXlsxFile, cols[5], "C")    //Square
+	setColumnValues(newXlsxFile, cols[6], "C")    //Square
 	setColumnValues(newXlsxFile, []string{}, "D") //height
 	setColumnValues(newXlsxFile, cols[3], "E")    //type
 	setColumnValues(newXlsxFile, cols[2], "F")    //layout
 	setColumnValues(newXlsxFile, cols[4], "G")    //views
 
-	//replaceUnitSquareFieldInXLSX(newXlsxFile, 2)
 	replaceUnitPriceFieldInXLSX(newXlsxFile, 1)
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 
@@ -307,7 +296,7 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 				if cellValue == row[colIndex] {
 
 					wordSplit := strings.Split(cellValue, "")
-					replaceWord := wordSplit[0] + "BR"
+					replaceWord := wordSplit[0] + " BR"
 					row[colIndex] = replaceWord
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
