@@ -129,8 +129,6 @@ func LogError(format string, v ...interface{}) {
 }
 
 func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
 	for _, sheet := range sheets {
