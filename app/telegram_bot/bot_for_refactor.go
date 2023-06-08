@@ -26,6 +26,7 @@ func getServices() []string {
 		"Binghatii",
 		"Deyaar",
 		"Emaar",
+		"Ellington Properties",
 	}
 
 	return services
@@ -54,6 +55,10 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 5:
 		return "XLSX"
 	case 6:
+		return "XLSX"
+	case 7:
+		return "XLSX"
+	case 8:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -141,6 +146,8 @@ func GetBot() {
 					getServiceDeyaar(update.Message, bot)
 				case 7:
 					getServiceEmaar(update.Message, bot)
+				case 8:
+					getServiceEllingtonProperties(update.Message, bot)
 				}
 			}
 		}
