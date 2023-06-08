@@ -1,4 +1,4 @@
-package binghatii
+package omniyatProperties
 
 import (
 	"bytes"
@@ -288,7 +288,6 @@ func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 				if cellValue == row[colIndex] {
 					// Заменяем значение ячейки на замену
 					word := strings.Replace(row[colIndex], ",", "/", -1)
-					word = strings.ReplaceAll(word, "and", "/")
 					row[colIndex] = word
 
 					// Получаем имя столбца на основе индекса столбца
