@@ -1,4 +1,4 @@
-package emaar
+package ellingtonProperties
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -48,15 +47,14 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	setColumnValues(newXlsxFile, cols[0], "A")    //number
-	setColumnValues(newXlsxFile, cols[5], "B")    //price
-	setColumnValues(newXlsxFile, cols[4], "C")    //Square
+	setColumnValues(newXlsxFile, cols[2], "A")    //number
+	setColumnValues(newXlsxFile, cols[8], "B")    //price
+	setColumnValues(newXlsxFile, cols[6], "C")    //Square
 	setColumnValues(newXlsxFile, []string{}, "D") //height
-	setColumnValues(newXlsxFile, cols[1], "E")    //type
-	setColumnValues(newXlsxFile, cols[2], "F")    //layout
+	setColumnValues(newXlsxFile, []string{}, "E") //type
+	setColumnValues(newXlsxFile, cols[3], "F")    //layout
 	setColumnValues(newXlsxFile, []string{}, "G") //views
 
-	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
@@ -127,50 +125,6 @@ func LogError(format string, v ...interface{}) {
 	log.Printf(format, v...)
 }
 
-func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	sheets := file.GetSheetList()
-
-	for _, sheet := range sheets {
-		rows, err := file.Rows(sheet)
-		if err != nil {
-			return err
-		}
-
-		rowIndex := 1
-
-		for rows.Next() {
-			row, err2 := rows.Columns()
-			if err2 != nil {
-				return err2
-			}
-
-			colIndex := indexOfCell
-
-			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					word1 := strings.Split(cellValue, " ")
-					word := word1[len(word1)-1]
-					row[colIndex] = word
-
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
-
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
-					if err1 != nil {
-						return err1
-					}
-					break
-				}
-			}
-			rowIndex++
-		}
-	}
-
-	return nil
-}
-
 func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	sheets := file.GetSheetList()
 
@@ -192,8 +146,7 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					word1 := strings.Split(cellValue, " ")
-					word := word1[0] + "BR"
+					word := cellValue + "BR"
 					row[colIndex] = word
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
