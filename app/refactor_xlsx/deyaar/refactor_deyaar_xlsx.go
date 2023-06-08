@@ -2,13 +2,17 @@ package deyaar
 
 import (
 	"bytes"
+	"fmt"
 	"genieMap/cmd"
+	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -49,9 +53,12 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, cols[6], "B")    //price
 	setColumnValues(newXlsxFile, cols[5], "C")    //Square
 	setColumnValues(newXlsxFile, []string{}, "D") //height
-	setColumnValues(newXlsxFile, []string{}, "E") //type
+	setColumnValues(newXlsxFile, cols[3], "E")    //type
 	setColumnValues(newXlsxFile, cols[2], "F")    //layout
 	setColumnValues(newXlsxFile, cols[4], "G")    //views
+
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+	replaceUnitPriceFieldInXLSX(newXlsxFile, 1)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 
@@ -60,7 +67,14 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		return nil, err3
 	}
 
-	return buffer, nil
+	buf, errFirstRow := cmd.UpdateFirstRowInCSV(buffer, _struct.GetNameFirstRow())
+	if errFirstRow != nil {
+		LogError("Ошибка при добавлении строки", errFirstRow)
+
+		return nil, errFirstRow
+	}
+
+	return buf, nil
 }
 
 func downloadFile(url string) ([]byte, error) {
@@ -112,4 +126,164 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					word1 := strings.Split(cellValue, " ")
+					fmt.Println(word1)
+					word := word1[0] + "BR"
+					row[colIndex] = word
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+//func replaceUnitPriceFieldInXLSX(file *excelize.File, indexOfCell int) error {
+//	//не забудь поменять значение word!!!!
+//	// Получаем список имен листов из файла
+//	sheets := file.GetSheetList()
+//
+//	for _, sheet := range sheets {
+//		rows, err := file.Rows(sheet)
+//		if err != nil {
+//			return err
+//		}
+//
+//		rowIndex := 1
+//
+//		for rows.Next() {
+//			row, err2 := rows.Columns()
+//			if err2 != nil {
+//				return err2
+//			}
+//
+//			colIndex := indexOfCell
+//
+//			for _, cellValue := range row {
+//				if cellValue == row[colIndex] {
+//					word1 := strings.Split(cellValue, ".")
+//					fmt.Println(word1)
+//					word := word1[0]
+//					row[colIndex] = word
+//
+//					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+//					if err1 != nil {
+//						return err1
+//					}
+//
+//					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+//					if err1 != nil {
+//						return err1
+//					}
+//					break
+//				}
+//			}
+//			rowIndex++
+//		}
+//	}
+//
+//	return nil
+//}
+
+func replaceUnitPriceFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+
+					word1 := Round(parseString(cellValue))
+					fmt.Println(word1)
+					word := strconv.Itoa(int(word1))
+					fmt.Println(word)
+					row[colIndex] = word
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+// Round возвращает ближайшее целочисленное значение.
+func Round(x float64) float64 {
+	t := math.Trunc(x)
+	if math.Abs(x-t) >= 0.5 {
+		return t + math.Copysign(1, x)
+	}
+	return t
+}
+
+func parseString(f string) float64 {
+	if s, err := strconv.ParseFloat(f, 64); err == nil {
+		fmt.Println(s) // 3.14159265
+		return s
+	}
+	return 0
 }
