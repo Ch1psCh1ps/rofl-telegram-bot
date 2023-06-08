@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -45,8 +46,9 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, cols[5], "F")
 	setColumnValues(newXlsxFile, cols[6], "G")
 
-	cmd.ReplaceFieldInXLSX(newXlsxFile)
-	cmd.ReplaceWhateverFieldInXLSX(newXlsxFile, 5)
+	ReplaceXLSXNumber(newXlsxFile, 0)
+	ReplaceXLSXLayout(newXlsxFile, 5)
+	ReplaceXLSXType(newXlsxFile, 4)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
@@ -63,6 +65,216 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	}
 
 	return buffer, nil
+}
+
+func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	// Обрабатываем каждый лист
+	for _, sheet := range sheets {
+		// Получаем все строки в листе
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Инициализируем индекс строки
+		rowIndex := 1
+
+		// Перебираем каждую строку
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			// Перебираем каждую ячейку в строке
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					// Заменяем значение ячейки на замену
+					word := strings.Split(cellValue, "")
+					row[colIndex] = word[0] + " BR"
+
+					// Получаем имя столбца на основе индекса столбца
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					// Обновляем значение ячейки в листе
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	// Обрабатываем каждый лист
+	for _, sheet := range sheets {
+		// Получаем все строки в листе
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Инициализируем индекс строки
+		rowIndex := 1
+
+		// Перебираем каждую строку
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			// Перебираем каждую ячейку в строке
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					word := strings.Split(row[colIndex], "_")
+					row[colIndex] = word[len(word)-1]
+
+					// Получаем имя столбца на основе индекса столбца
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					// Обновляем значение ячейки в листе
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
+	//не забудь поменять значение word!!!!
+	// Получаем список имен листов из файла
+	sheets := file.GetSheetList()
+
+	// Обрабатываем каждый лист
+	for _, sheet := range sheets {
+		// Получаем все строки в листе
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Инициализируем индекс строки
+		rowIndex := 1
+
+		// Перебираем каждую строку
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			// Перебираем каждую ячейку в строке
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					// Заменяем значение ячейки на замену
+					word := strings.ToLower(cellValue)
+					row[colIndex] = word
+
+					// Получаем имя столбца на основе индекса столбца
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					// Обновляем значение ячейки в листе
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func ReplaceNumberXLSX(file *excelize.File) error {
+	sheets := file.GetSheetList()
+
+	// Обрабатываем каждый лист
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			for colIndex, cellValue := range row {
+				if cellValue == row[colIndex] {
+					word := strings.Split(row[colIndex], "_")
+					row[colIndex] = word[len(word)-1]
+
+					// Получаем имя столбца на основе индекса столбца
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					// Обновляем значение ячейки в листе
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
 }
 
 func downloadFile(url string) ([]byte, error) {
