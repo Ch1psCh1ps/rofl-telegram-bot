@@ -20,9 +20,7 @@ func LoadEnv() {
 		panic(errGetWd)
 	}
 
-	if err := godotenv.Load(realPath + "/.env"); err != nil {
-		panic(err)
-	}
+	godotenv.Load(realPath + "/.env")
 }
 
 func ConvertXlsxToCsv(inputFile *excelize.File) (*bytes.Buffer, error) {
