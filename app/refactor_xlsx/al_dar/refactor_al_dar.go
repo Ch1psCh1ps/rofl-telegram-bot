@@ -62,7 +62,7 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	if errFirstRow != nil {
 		LogError("Ошибка при добавлении строки", errFirstRow)
 
-		return nil, errFirstRow
+		return buf, errFirstRow
 	}
 
 	return buffer, nil
@@ -258,16 +258,23 @@ func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					word := strings.Contains(cellValue, "view")
-					if word == true {
-						row[colIndex] = strings.ReplaceAll(cellValue, "view", "")
+					wordContains := strings.Contains(cellValue, "view")
+					wordContains1 := strings.Contains(cellValue, "View")
+					if wordContains == true || wordContains1 == true {
+						replaceWord := strings.ReplaceAll(cellValue, "view", "")
+						replaceWord = strings.ReplaceAll(replaceWord, "View", "")
+						replaceWordArray := strings.Split(replaceWord, "Street")
+						replaceWord = strings.Join(replaceWordArray, " Street")
+						replaceWordArray = strings.Split(replaceWord, "park")
+						replaceWord = strings.Join(replaceWordArray, " park")
+
+						row[colIndex] = replaceWord
 
 						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
 						if err1 != nil {
 							return err1
 						}
 
-						// Обновляем значение ячейки в листе
 						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 						if err1 != nil {
 							return err1
