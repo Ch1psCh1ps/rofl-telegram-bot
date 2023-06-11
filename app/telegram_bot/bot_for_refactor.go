@@ -96,7 +96,7 @@ func GetBot() {
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "start":
-				msg := tgbotapi.NewMessage(chatID, "Выберите сервисы")
+				msg := tgbotapi.NewMessage(chatID, "Выбери сервис сучка (цифру)")
 				bot.Send(msg)
 
 				sendServiceList(bot, chatID)
@@ -166,12 +166,12 @@ func isServiceNumber(message string) bool {
 }
 
 func sendProcessingMessage(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Сейчас сделаю обновленный файл 🥰")
+	msg := tgbotapi.NewMessage(chatID, "Принял, начинаю работать 🕖")
 	bot.Send(msg)
 }
 
 func sendUpdateMessage(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Вот обновление 🤩")
+	msg := tgbotapi.NewMessage(chatID, "Готово 🤩")
 	bot.Send(msg)
 }
 
