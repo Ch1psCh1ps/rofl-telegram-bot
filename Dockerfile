@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -o app .
+RUN go build -o geniemap .
+RUN chmod +x geniemap
 
-CMD ./app
+CMD ./geniemap
