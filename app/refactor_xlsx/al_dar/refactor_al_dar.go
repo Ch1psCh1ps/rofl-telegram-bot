@@ -38,17 +38,18 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	setColumnValues(newXlsxFile, cols[2], "A")
-	setColumnValues(newXlsxFile, cols[11], "B")
-	setColumnValues(newXlsxFile, cols[10], "C")
-	setColumnValues(newXlsxFile, []string{}, "D")
-	setColumnValues(newXlsxFile, cols[4], "E")
-	setColumnValues(newXlsxFile, cols[5], "F")
-	setColumnValues(newXlsxFile, cols[6], "G")
+	setColumnValues(newXlsxFile, cols[2], "A")    //number
+	setColumnValues(newXlsxFile, cols[11], "B")   //price
+	setColumnValues(newXlsxFile, cols[10], "C")   //Square
+	setColumnValues(newXlsxFile, []string{}, "D") //height
+	setColumnValues(newXlsxFile, cols[4], "E")    //type
+	setColumnValues(newXlsxFile, cols[5], "F")    //layout
+	setColumnValues(newXlsxFile, cols[6], "G")    //views
 
 	ReplaceXLSXNumber(newXlsxFile, 0)
 	ReplaceXLSXLayout(newXlsxFile, 5)
 	ReplaceXLSXType(newXlsxFile, 4)
+	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
@@ -149,9 +150,14 @@ func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 
 			// Перебираем каждую ячейку в строке
 			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					word := strings.Split(row[colIndex], "_")
-					row[colIndex] = word[len(word)-1]
+				if cellValue == row[colIndex] && cellValue != "EndUnitCode" {
+
+					word := strings.Split(row[colIndex], "-")
+					divisionByNumber := strings.Split(word[len(word)-3], "_")
+					row[colIndex] =
+						divisionByNumber[len(divisionByNumber)-1] + "-" +
+							word[len(word)-2] + "-" +
+							word[len(word)-1]
 
 					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -160,7 +166,7 @@ func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 					}
 
 					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
 					}
@@ -220,6 +226,68 @@ func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
 						return err1
 					}
 					break
+				}
+			}
+
+			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					word := strings.Contains(cellValue, "view")
+					if word == true {
+						row[colIndex] = strings.ReplaceAll(cellValue, "view", "")
+
+						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+						if err1 != nil {
+							return err1
+						}
+
+						// Обновляем значение ячейки в листе
+						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+						if err1 != nil {
+							return err1
+						}
+						break
+					} else {
+						row[colIndex] = ""
+
+						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+						if err1 != nil {
+							return err1
+						}
+
+						// Обновляем значение ячейки в листе
+						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+						if err1 != nil {
+							return err1
+						}
+						break
+					}
 				}
 			}
 
