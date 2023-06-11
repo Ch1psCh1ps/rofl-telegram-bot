@@ -2,7 +2,6 @@ package binghatii
 
 import (
 	"bytes"
-	"fmt"
 	"genieMap/cmd"
 	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
@@ -49,16 +48,33 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	setColumnValues(newXlsxFile, cols[1], "A")    //number
-	setColumnValues(newXlsxFile, cols[4], "B")    //price
-	setColumnValues(newXlsxFile, cols[7], "C")    //Square
+	for i, col := range cols {
+		for _, colName := range col {
+			//if colName == "Unit Code" {
+			//	setColumnValues(newXlsxFile, cols[i], "A") //number
+			//}
+			switch colName {
+			case "Unit Code":
+				setColumnValues(newXlsxFile, cols[i], "A") //number
+			case "Target Unit Price":
+				setColumnValues(newXlsxFile, cols[i], "B") //price
+			case "Total Area":
+				setColumnValues(newXlsxFile, cols[i], "C") //Square
+			case "Unit Type":
+				setColumnValues(newXlsxFile, cols[i], "F") //layout
+				//replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+			case "Description":
+				setColumnValues(newXlsxFile, cols[i], "F") //layout
+				//replaceUnitLayoutDescriptionFieldInXLSX(newXlsxFile, 5)
+			case "View":
+				setColumnValues(newXlsxFile, cols[i], "G") //views
+			}
+		}
+	}
+	setColumnValues(newXlsxFile, []string{}, "E") //type
 	setColumnValues(newXlsxFile, []string{}, "D") //height
-	setColumnValues(newXlsxFile, cols[2], "E")    //type
-	setColumnValues(newXlsxFile, cols[3], "F")    //layout
-	setColumnValues(newXlsxFile, cols[6], "G")    //views
 
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
-	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
@@ -137,13 +153,9 @@ func LogError(format string, v ...interface{}) {
 }
 
 func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
-	// Обрабатываем каждый лист
 	for _, sheet := range sheets {
-		// Получаем все строки в листе
 		rows, err := file.Rows(sheet)
 		if err != nil {
 			return err
@@ -164,10 +176,8 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 			// Перебираем каждую ячейку в строке
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					// Заменяем значение ячейки на замену
-					word := strings.Replace(row[colIndex], "BUGA-", "", 1)
-					//word := strings.Fields(row[colIndex])
-					row[colIndex] = word
+					replaceWord := strings.Split(cellValue, "-")
+					row[colIndex] = replaceWord[len(replaceWord)-1]
 
 					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -176,7 +186,7 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					}
 
 					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
 					}
@@ -193,6 +203,60 @@ func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 }
 
 func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue != "Unit Type" {
+					if cellValue == row[colIndex] {
+						// Заменяем значение ячейки на замену
+						words1 := strings.Split(row[colIndex], "-")
+						replaceBr := strings.Split(words1[1], " ")
+
+						for _, num := range replaceBr {
+							_, errCon := strconv.Atoi(num)
+							if errCon == nil {
+								row[colIndex] = num + " BR"
+							}
+						}
+
+						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+						if err1 != nil {
+							return err1
+						}
+
+						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+						if err1 != nil {
+							return err1
+						}
+						break
+					}
+				}
+			}
+
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitLayoutDescriptionFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	//не забудь поменять значение word!!!!
 	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
@@ -225,7 +289,6 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 					for i, word1 := range words1 {
 						if strings.Contains(word1, "&") || strings.Contains(word1, "/") {
-							fmt.Println(words1[i], "words1")
 							words1[i] = strings.Replace(word1, "/", " or ", -1)
 						}
 					}
@@ -289,6 +352,7 @@ func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					// Заменяем значение ячейки на замену
 					word := strings.Replace(row[colIndex], ",", "/", -1)
 					word = strings.ReplaceAll(word, "and", "/")
+					word = strings.ReplaceAll(word, "+", "/")
 					row[colIndex] = word
 
 					// Получаем имя столбца на основе индекса столбца
