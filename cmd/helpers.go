@@ -289,3 +289,21 @@ func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, 
 
 	return newBuffer, nil
 }
+
+func AddEmptyFirstLine(buffer *bytes.Buffer) (*bytes.Buffer, error) {
+	result := bytes.NewBuffer(nil)
+
+	_, err := fmt.Fprintln(result, "empty")
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteTo(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
