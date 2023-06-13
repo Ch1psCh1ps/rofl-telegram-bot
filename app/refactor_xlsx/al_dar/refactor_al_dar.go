@@ -212,6 +212,10 @@ func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
 				if cellValue == row[colIndex] {
 					// Заменяем значение ячейки на замену
 					word := strings.ToLower(cellValue)
+					switch word {
+					case "apartment":
+						word = "apartments"
+					}
 					row[colIndex] = word
 
 					// Получаем имя столбца на основе индекса столбца
