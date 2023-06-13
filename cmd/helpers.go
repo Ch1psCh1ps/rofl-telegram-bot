@@ -264,6 +264,7 @@ func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, 
 	}
 
 	reader := csv.NewReader(bytes.NewReader(content))
+	reader.FieldsPerRecord = -1
 
 	rows, err := reader.ReadAll()
 	if err != nil {

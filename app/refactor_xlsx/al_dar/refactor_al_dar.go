@@ -60,9 +60,9 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 
 	buffer, errFirstRow := cmd.UpdateFirstRowInCSV(buf, _struct.GetNameFirstRow())
 	if errFirstRow != nil {
-		LogError("Ошибка при добавлении строки", errFirstRow)
+		LogError("Ошибка при замене первой строки", errFirstRow)
 
-		return buf, errFirstRow
+		return nil, errFirstRow
 	}
 
 	return buffer, nil
@@ -155,8 +155,8 @@ func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 					word := strings.Split(row[colIndex], "-")
 					divisionByNumber := strings.Split(word[len(word)-3], "_")
 					row[colIndex] =
-						divisionByNumber[len(divisionByNumber)-1] + "-" +
-							word[len(word)-2] + "-" +
+						divisionByNumber[len(divisionByNumber)-1] +
+							word[len(word)-2] +
 							word[len(word)-1]
 
 					// Получаем имя столбца на основе индекса столбца
