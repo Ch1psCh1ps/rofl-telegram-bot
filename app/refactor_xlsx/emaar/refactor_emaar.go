@@ -62,7 +62,6 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
-
 	if err3 != nil {
 		LogError("Ошибка при конвертации XLSX в CSV: %v", err3)
 		return nil, err3
