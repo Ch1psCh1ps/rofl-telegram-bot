@@ -2,12 +2,12 @@ package telegram_bot
 
 import (
 	"genieMap/app/refactor_xlsx/Condor"
+	"genieMap/app/refactor_xlsx/Town_x"
 	"genieMap/app/refactor_xlsx/al_dar"
 	"genieMap/app/refactor_xlsx/binghatii"
 	"genieMap/app/refactor_xlsx/deyaar"
 	"genieMap/app/refactor_xlsx/ellingtonProperties"
 	"genieMap/app/refactor_xlsx/emaar"
-	"genieMap/app/refactor_xlsx/luma_22"
 	"genieMap/app/refactor_xlsx/siadah"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -41,7 +41,7 @@ func getServiceAlDar(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 	}
 }
 
-func getServiceLuma22(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+func getServiceTownX(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 	if message.Document != nil {
 		fileID := message.Document.FileID
 		fileURL, err := bot.GetFileDirectURL(fileID)
@@ -55,7 +55,7 @@ func getServiceLuma22(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 
 		sendProcessingMessage(bot, message.Chat.ID)
 
-		xlsxBuffer, err := luma_22.DoBookCSV(fileURL)
+		xlsxBuffer, err := Town_x.DoBookCSV(fileURL)
 		if err != nil {
 			log.Printf("Ошибка при обработке файла: %v", err)
 			return

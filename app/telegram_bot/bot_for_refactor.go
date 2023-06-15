@@ -20,7 +20,7 @@ type BotState struct {
 func getServices() []string {
 	services := []string{
 		"Al Dar",
-		"Luna 22",
+		"Town X",
 		"Condor",
 		"Siadah",
 		"Binghatii",
@@ -135,7 +135,7 @@ func GetBot() {
 				case 1:
 					getServiceAlDar(update.Message, bot)
 				case 2:
-					getServiceLuma22(update.Message, bot)
+					getServiceTownX(update.Message, bot)
 				case 3:
 					getServiceCondor(update.Message, bot)
 				case 4:
