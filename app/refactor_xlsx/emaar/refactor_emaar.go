@@ -59,9 +59,9 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
-
 	if err3 != nil {
 		LogError("Ошибка при конвертации XLSX в CSV: %v", err3)
 		return nil, err3
@@ -212,6 +212,53 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					}
 
 					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitTypeFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					switch cellValue {
+					case "apartment":
+						row[colIndex] = "Apartments"
+					case "Apartment":
+						row[colIndex] = "Apartments"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
 					}
