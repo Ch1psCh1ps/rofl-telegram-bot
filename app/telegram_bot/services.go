@@ -9,6 +9,7 @@ import (
 	"genieMap/app/refactor_xlsx/deyaar"
 	"genieMap/app/refactor_xlsx/ellingtonProperties"
 	"genieMap/app/refactor_xlsx/emaar"
+	"genieMap/app/refactor_xlsx/reportage_properties"
 	"genieMap/app/refactor_xlsx/siadah"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -246,6 +247,33 @@ func getServiceAzizi(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 		sendProcessingMessage(bot, message.Chat.ID)
 
 		xlsxBuffer, err := azizi.DoBookCSV(fileURL)
+		if err != nil {
+			log.Printf("Ошибка при обработке файла: %v", err)
+			return
+		}
+
+		sendUpdateMessage(bot, message.Chat.ID)
+		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
+	} else {
+		errMsg(bot, message.Chat.ID)
+	}
+}
+
+func getServiceReportageProperties(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+	if message.Document != nil {
+		fileID := message.Document.FileID
+		fileURL, err := bot.GetFileDirectURL(fileID)
+		fileName := message.Document.FileName
+		fileNameArray := strings.Split(fileName, ".")
+		fileName = fileNameArray[0]
+		if err != nil {
+			log.Printf("Ошибка при получении файла: %v", err)
+			return
+		}
+
+		sendProcessingMessage(bot, message.Chat.ID)
+
+		xlsxBuffer, err := reportage_properties.DoBookCSV(fileURL)
 		if err != nil {
 			log.Printf("Ошибка при обработке файла: %v", err)
 			return

@@ -28,6 +28,7 @@ func getServices() []string {
 		"Emaar",
 		"Ellington Properties",
 		"Azizi",
+		"Reportage Properties",
 	}
 
 	return services
@@ -62,6 +63,8 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 8:
 		return "XLSX"
 	case 9:
+		return "XLSX"
+	case 10:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -153,6 +156,8 @@ func GetBot() {
 					getServiceEllingtonProperties(update.Message, bot)
 				case 9:
 					getServiceAzizi(update.Message, bot)
+				case 10:
+					getServiceReportageProperties(update.Message, bot)
 				}
 			}
 		}
@@ -188,6 +193,8 @@ func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer, f
 
 	docMsg := tgbotapi.NewDocument(chatID, xlsxConfig)
 	bot.Send(docMsg)
+	bot.Send(tgbotapi.NewMessage(chatID, "Обязательно проверь документ❗❗❗\nВозможно он не полностью заполнен"))
+
 }
 
 func errMsg(bot *tgbotapi.BotAPI, chatID int64) {
