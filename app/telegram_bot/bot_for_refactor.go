@@ -29,6 +29,7 @@ func getServices() []string {
 		"Ellington Properties",
 		"Azizi",
 		"Reportage Properties",
+		"Condor 8 колонок",
 	}
 
 	return services
@@ -65,6 +66,8 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 9:
 		return "XLSX"
 	case 10:
+		return "XLSX"
+	case 11:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -158,6 +161,8 @@ func GetBot() {
 					getServiceAzizi(update.Message, bot)
 				case 10:
 					getServiceReportageProperties(update.Message, bot)
+				case 11:
+					getServiceCondor8Cols(update.Message, bot)
 				}
 			}
 		}

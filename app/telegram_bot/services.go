@@ -6,6 +6,7 @@ import (
 	"genieMap/app/refactor_xlsx/al_dar"
 	"genieMap/app/refactor_xlsx/azizi"
 	"genieMap/app/refactor_xlsx/binghatii"
+	"genieMap/app/refactor_xlsx/condor8Cols"
 	"genieMap/app/refactor_xlsx/deyaar"
 	"genieMap/app/refactor_xlsx/ellingtonProperties"
 	"genieMap/app/refactor_xlsx/emaar"
@@ -85,6 +86,33 @@ func getServiceCondor(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 		sendProcessingMessage(bot, message.Chat.ID)
 
 		xlsxBuffer, err := Condor.DoBookCSV(fileURL)
+		if err != nil {
+			log.Printf("Ошибка при обработке файла: %v", err)
+			return
+		}
+
+		sendUpdateMessage(bot, message.Chat.ID)
+		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
+	} else {
+		errMsg(bot, message.Chat.ID)
+	}
+}
+
+func getServiceCondor8Cols(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+	if message.Document != nil {
+		fileID := message.Document.FileID
+		fileURL, err := bot.GetFileDirectURL(fileID)
+		fileName := message.Document.FileName
+		fileNameArray := strings.Split(fileName, ".")
+		fileName = fileNameArray[0]
+		if err != nil {
+			log.Printf("Ошибка при получении файла: %v", err)
+			return
+		}
+
+		sendProcessingMessage(bot, message.Chat.ID)
+
+		xlsxBuffer, err := condor8Cols.DoBookCSV(fileURL)
 		if err != nil {
 			log.Printf("Ошибка при обработке файла: %v", err)
 			return
