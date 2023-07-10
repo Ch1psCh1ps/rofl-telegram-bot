@@ -30,6 +30,7 @@ func getServices() []string {
 		"Azizi",
 		"Reportage Properties",
 		"Condor 8 колонок",
+		"Tiger",
 	}
 
 	return services
@@ -68,6 +69,8 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 10:
 		return "XLSX"
 	case 11:
+		return "XLSX"
+	case 12:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -163,6 +166,8 @@ func GetBot() {
 					getServiceReportageProperties(update.Message, bot)
 				case 11:
 					getServiceCondor8Cols(update.Message, bot)
+				case 12:
+					getServiceTiger(update.Message, bot)
 				}
 			}
 		}
@@ -198,8 +203,10 @@ func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer, f
 
 	docMsg := tgbotapi.NewDocument(chatID, xlsxConfig)
 	bot.Send(docMsg)
-	bot.Send(tgbotapi.NewMessage(chatID, "Обязательно проверь документ❗❗❗\nВозможно он не полностью заполнен"))
+}
 
+func sendAttentionMessage(bot *tgbotapi.BotAPI, chatID int64) {
+	bot.Send(tgbotapi.NewMessage(chatID, "Обязательно проверь документ❗❗❗\nВозможно он не полностью заполнен"))
 }
 
 func errMsg(bot *tgbotapi.BotAPI, chatID int64) {

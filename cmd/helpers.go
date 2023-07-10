@@ -8,6 +8,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -306,4 +307,28 @@ func AddEmptyFirstLine(buffer *bytes.Buffer) (*bytes.Buffer, error) {
 	}
 
 	return result, nil
+}
+
+func DownloadFile(url string) ([]byte, error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	fileContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileContent, nil
+}
+
+func GetData(fileContent []byte) *excelize.File {
+	buffer := bytes.NewBuffer(fileContent)
+	data, err := excelize.OpenReader(buffer)
+	if err != nil {
+		LogError("%v", err)
+	}
+	return data
 }
