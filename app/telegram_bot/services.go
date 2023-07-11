@@ -330,14 +330,26 @@ func getServiceAzizi(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 
 		sendProcessingMessage(bot, message.Chat.ID)
 
-		xlsxBuffer, err := azizi.DoBookCSV(fileURL)
-		if err != nil {
-			log.Printf("Ошибка при обработке файла: %v", err)
-			return
+		fileContent, downloadFileErr := cmd.DownloadFile(fileURL)
+		if downloadFileErr != nil {
+			log.Printf("Ошибка при загрузке файла: %v", downloadFileErr)
 		}
 
+		data := cmd.GetData(fileContent)
+
+		sheetList := data.GetSheetList()
+		for _, sheetName := range sheetList {
+			xlsxBuffer, err4 := azizi.DoBookCSV(fileURL, sheetName)
+			if err4 != nil {
+				log.Printf("Ошибка при обработке файла: %v", err)
+				return
+			}
+
+			//sendUpdateMessage(bot, message.Chat.ID)
+			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+		}
 		sendUpdateMessage(bot, message.Chat.ID)
-		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
+		sendAttentionMessage(bot, message.Chat.ID)
 	} else {
 		errMsg(bot, message.Chat.ID)
 	}
