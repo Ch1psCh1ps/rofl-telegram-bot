@@ -168,18 +168,57 @@ func getServiceBinghatii(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 
 		sendProcessingMessage(bot, message.Chat.ID)
 
-		xlsxBuffer, err := binghatii.DoBookCSV(fileURL)
-		if err != nil {
-			log.Printf("Ошибка при обработке файла: %v", err)
-			return
+		fileContent, downloadFileErr := cmd.DownloadFile(fileURL)
+		if downloadFileErr != nil {
+			log.Printf("Ошибка при загрузке файла: %v", downloadFileErr)
 		}
 
+		data := cmd.GetData(fileContent)
+
+		sheetList := data.GetSheetList()
+		for _, sheetName := range sheetList {
+			xlsxBuffer, err4 := binghatii.DoBookCSV(fileURL, sheetName)
+			if err4 != nil {
+				log.Printf("Ошибка при обработке файла: %v", err)
+				return
+			}
+
+			//sendUpdateMessage(bot, message.Chat.ID)
+			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+		}
 		sendUpdateMessage(bot, message.Chat.ID)
-		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
+		sendAttentionMessage(bot, message.Chat.ID)
 	} else {
 		errMsg(bot, message.Chat.ID)
 	}
 }
+
+//func getServiceBinghatii(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+//	if message.Document != nil {
+//		fileID := message.Document.FileID
+//		fileURL, err := bot.GetFileDirectURL(fileID)
+//		fileName := message.Document.FileName
+//		fileNameArray := strings.Split(fileName, ".")
+//		fileName = fileNameArray[0]
+//		if err != nil {
+//			log.Printf("Ошибка при получении файла: %v", err)
+//			return
+//		}
+//
+//		sendProcessingMessage(bot, message.Chat.ID)
+//
+//		xlsxBuffer, err := binghatii.DoBookCSV(fileURL)
+//		if err != nil {
+//			log.Printf("Ошибка при обработке файла: %v", err)
+//			return
+//		}
+//
+//		sendUpdateMessage(bot, message.Chat.ID)
+//		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
+//	} else {
+//		errMsg(bot, message.Chat.ID)
+//	}
+//}
 
 func getServiceDeyaar(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 	if message.Document != nil {
