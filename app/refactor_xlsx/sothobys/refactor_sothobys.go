@@ -65,18 +65,18 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 		return sheetErr
 	}
 
-	//for i, col := range cols {
-	//	for _, colName := range col {
-	//		colName = strings.ReplaceAll(colName, " ", "")
-	//		colName = strings.ToLower(colName)
-	//		switch colName {
-	//		case "totalarea":
-	//			setColumnValues(newXlsxFile, cols[i], "C") //Square
-	//		case "totalarea(sqft)":
-	//			setColumnValues(newXlsxFile, cols[i], "C") //Square
-	//		}
-	//	}
-	//}
+	for i, col := range cols {
+		for _, colName := range col {
+			colName = strings.ReplaceAll(colName, " ", "")
+			colName = strings.ToLower(colName)
+			switch colName {
+			case "totalarea":
+				setColumnValues(newXlsxFile, cols[i], "C") //Square
+			case "totalarea(sqft)":
+				setColumnValues(newXlsxFile, cols[i], "C") //Square
+			}
+		}
+	}
 
 	for _, row := range rows {
 		for i, cellValue := range row {
@@ -88,15 +88,15 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 			if strings.Contains(cellValue, "saleprice") {
 				setColumnValues(newXlsxFile, cols[i], "B") //price
 			}
-			if strings.Contains(cellValue, "totalarea") {
-				setColumnValues(newXlsxFile, cols[i], "C") //Square
-			}
-			if strings.Contains(cellValue, "totalarea(sqft)") {
-				setColumnValues(newXlsxFile, cols[i], "C") //Square
-			}
+			//if strings.Contains(cellValue, "totalarea") {
+			//	setColumnValues(newXlsxFile, cols[i], "C") //Square
+			//}
+			//if strings.Contains(cellValue, "totalarea(sqft)") {
+			//	setColumnValues(newXlsxFile, cols[i], "C") //Square
+			//}
 			setColumnValues(newXlsxFile, []string{}, "D") //height
 			setColumnValues(newXlsxFile, []string{}, "E") //type
-			if strings.Contains(cellValue, "bedrooms") || strings.Contains(cellValue, "beds") {
+			if strings.Contains(cellValue, "bedrooms") || strings.Contains(cellValue, "unittype") {
 				setColumnValues(newXlsxFile, cols[i], "F") //layout
 			}
 			if strings.Contains(cellValue, "view") {
@@ -106,7 +106,7 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 	}
 
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
-	//replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 	//replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 	//replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
 
@@ -225,43 +225,21 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for i, cellValue := range row {
 				if cellValue == row[colIndex] {
-					cellValue = strings.ToLower(cellValue)
-					if strings.Contains(cellValue, "duplex") {
-						if i >= 2 {
-							row[i-2] = "Duplex"
-							cellValue = strings.ReplaceAll(cellValue, "duplex", "")
-						}
-					}
-					if strings.Contains(cellValue, "simplex") {
-						if i >= 2 {
-							row[i-2] = "Simplex"
-							cellValue = strings.ReplaceAll(cellValue, "simplex", "")
-						}
-					}
-					if strings.Contains(cellValue, "triplex") {
-						if i >= 2 {
-							row[i-2] = "Triplex"
-							cellValue = strings.ReplaceAll(cellValue, "triplex", "")
-						}
-					}
-					if strings.Contains(cellValue, "quadruplex") {
-						if i >= 2 {
-							row[i-2] = "Quadruplex"
-							cellValue = strings.ReplaceAll(cellValue, "quadruplex", "")
-						}
-					}
-
 					switch cellValue {
-					case "fivebedroom":
-						row[colIndex] = "5 BR"
-					case "fourbedroom":
-						row[colIndex] = "4 BR"
-					case "threebedroom":
-						row[colIndex] = "3 BR"
-					case "twobedroom":
-						row[colIndex] = "2 BR"
-					case "onebedroom":
+					case "1BR":
 						row[colIndex] = "1 BR"
+					case "2BR":
+						row[colIndex] = "2 BR"
+					case "3BR":
+						row[colIndex] = "3 BR"
+					case "4BR":
+						row[colIndex] = "4 BR"
+					case "5BR":
+						row[colIndex] = "5 BR"
+					case "6BR":
+						row[colIndex] = "6 BR"
+					case "7BR":
+						row[colIndex] = "7 BR"
 					}
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
