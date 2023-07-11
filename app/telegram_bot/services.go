@@ -304,7 +304,9 @@ func getServiceEllingtonProperties(message *tgbotapi.Message, bot *tgbotapi.BotA
 			}
 
 			//sendUpdateMessage(bot, message.Chat.ID)
-			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+			if sheetName != "hiddenSheet" {
+				sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+			}
 		}
 		sendUpdateMessage(bot, message.Chat.ID)
 		sendAttentionMessage(bot, message.Chat.ID)
