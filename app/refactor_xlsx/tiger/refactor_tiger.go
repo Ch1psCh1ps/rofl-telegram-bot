@@ -65,6 +65,17 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 		return sheetErr
 	}
 
+	for i, col := range cols {
+		for _, colName := range col {
+			switch colName {
+			case "NetArea":
+				setColumnValues(newXlsxFile, cols[i], "C") //Square
+			case "Net(sqft)":
+				setColumnValues(newXlsxFile, cols[i], "C") //Square
+			}
+		}
+	}
+
 	for _, row := range rows {
 		for i, cellValue := range row {
 			if strings.Contains(cellValue, "Unit") {
@@ -72,9 +83,6 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 			}
 			if strings.Contains(cellValue, "Price") {
 				setColumnValues(newXlsxFile, cols[i], "B") //price
-			}
-			if strings.Contains(cellValue, "Net(sqft)") {
-				setColumnValues(newXlsxFile, cols[i], "C") //Square
 			}
 			setColumnValues(newXlsxFile, []string{}, "D") //height
 			setColumnValues(newXlsxFile, []string{}, "E") //type
