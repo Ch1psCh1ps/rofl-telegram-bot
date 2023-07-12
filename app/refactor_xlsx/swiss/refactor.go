@@ -87,8 +87,8 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
-	//replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
-	//replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
+	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
+	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
 
 	return nil
 }
@@ -224,54 +224,6 @@ func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	return nil
 }
 
-//func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
-//	sheets := file.GetSheetList()
-//
-//	for _, sheet := range sheets {
-//		rows, err := file.Rows(sheet)
-//		if err != nil {
-//			return err
-//		}
-//
-//		rowIndex := 1
-//
-//		for rows.Next() {
-//			row, err2 := rows.Columns()
-//			if err2 != nil {
-//				return err2
-//			}
-//
-//			colIndex := indexOfCell
-//
-//			for _, cellValue := range row {
-//				if cellValue == row[colIndex] {
-//					cellValue = strings.ToLower(cellValue)
-//					if cellValue == "s" {
-//						row[colIndex] = "Studio"
-//					} else {
-//						row[colIndex] = cellValue + " BR"
-//					}
-//
-//					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-//					if err1 != nil {
-//						return err1
-//					}
-//
-//					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
-//					if err1 != nil {
-//						return err1
-//					}
-//
-//					break
-//				}
-//			}
-//			rowIndex++
-//		}
-//	}
-//
-//	return nil
-//}
-
 func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	sheets := file.GetSheetList()
 
@@ -357,7 +309,7 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 							cellValue = strings.ReplaceAll(cellValue, "simplex", "")
 						}
 					}
-					if strings.Contains(cellValue, "duplex") {
+					if strings.Contains(cellValue, "duplex") /*|| strings.Contains(cellValue, "loft")*/ {
 						if i >= 2 {
 							row[i-2] = "Duplex"
 							cellValue = strings.ReplaceAll(cellValue, "duplex", "")
@@ -395,6 +347,8 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 							row[colIndex] = "6 BR"
 						case "7b":
 							row[colIndex] = "7 BR"
+							//case "loft":
+							//	row[colIndex] = "1 BR"
 						}
 					}
 
