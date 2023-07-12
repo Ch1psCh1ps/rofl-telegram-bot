@@ -120,12 +120,10 @@ func GetBot() {
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "start":
-				msg := tgbotapi.NewMessage(chatID, "Выбери сервис сучка (цифру)")
-				bot.Send(msg)
-
+				sendStartButton(bot, chatID)
 				sendServiceList(bot, chatID)
 			case "stop":
-				msg := tgbotapi.NewMessage(chatID, "Бот прекратил ответы на команды")
+				msg := tgbotapi.NewMessage(chatID, "Бот НЕ прекратил ответы на команды")
 				bot.Send(msg)
 				continue //
 			}
@@ -244,4 +242,16 @@ func sendServiceList(bot *tgbotapi.BotAPI, chatID int64) {
 
 	servicesMsg := tgbotapi.NewMessage(chatID, numberedServices.String())
 	bot.Send(servicesMsg)
+}
+
+func sendStartButton(bot *tgbotapi.BotAPI, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Выбери сервис (цифру)")
+	startButton := tgbotapi.NewKeyboardButton("/start")
+
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(startButton),
+	)
+
+	msg.ReplyMarkup = keyboard
+	bot.Send(msg)
 }
