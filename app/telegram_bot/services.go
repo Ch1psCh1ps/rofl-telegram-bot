@@ -14,6 +14,7 @@ import (
 	"genieMap/app/refactor_xlsx/reportage_properties"
 	"genieMap/app/refactor_xlsx/siadah"
 	"genieMap/app/refactor_xlsx/sothobys"
+	"genieMap/app/refactor_xlsx/swiss"
 	"genieMap/app/refactor_xlsx/tiger"
 	"genieMap/cmd"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -489,6 +490,45 @@ func getServiceObject1(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 				return
 			}
 
+			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+		}
+		sendUpdateMessage(bot, message.Chat.ID)
+		sendAttentionMessage(bot, message.Chat.ID)
+	} else {
+		errMsg(bot, message.Chat.ID)
+	}
+}
+
+func getServiceSwiss(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+	if message.Document != nil {
+		fileID := message.Document.FileID
+		fileURL, err := bot.GetFileDirectURL(fileID)
+		fileName := message.Document.FileName
+		fileNameArray := strings.Split(fileName, ".")
+		fileName = fileNameArray[0]
+		if err != nil {
+			log.Printf("Ошибка при получении файла: %v", err)
+			return
+		}
+
+		sendProcessingMessage(bot, message.Chat.ID)
+
+		fileContent, downloadFileErr := cmd.DownloadFile(fileURL)
+		if downloadFileErr != nil {
+			log.Printf("Ошибка при загрузке файла: %v", downloadFileErr)
+		}
+
+		data := cmd.GetData(fileContent)
+
+		sheetList := data.GetSheetList()
+		for _, sheetName := range sheetList {
+			xlsxBuffer, err4 := swiss.DoBookCSV(fileURL, sheetName)
+			if err4 != nil {
+				log.Printf("Ошибка при обработке файла: %v", err)
+				return
+			}
+
+			//sendUpdateMessage(bot, message.Chat.ID)
 			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
 		}
 		sendUpdateMessage(bot, message.Chat.ID)
