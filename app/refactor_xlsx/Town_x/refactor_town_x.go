@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -53,6 +54,8 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, []string{}, "E") //type
 	setColumnValues(newXlsxFile, cols[3], "F")    //layout
 	setColumnValues(newXlsxFile, cols[4], "G")    //views
+
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 
@@ -120,4 +123,69 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					cellValue = strings.ToLower(cellValue)
+					cellValue = strings.ReplaceAll(cellValue, " ", "")
+					if strings.Contains(cellValue, "onebedroom") {
+						row[colIndex] = "1 BR"
+					}
+					if strings.Contains(cellValue, "twobedroom") {
+						row[colIndex] = "2 BR"
+					}
+					if strings.Contains(cellValue, "threebedroom") {
+						row[colIndex] = "3 BR"
+					}
+					if strings.Contains(cellValue, "fourbedroom") {
+						row[colIndex] = "4 BR"
+					}
+					if strings.Contains(cellValue, "fivebedroom") {
+						row[colIndex] = "5 BR"
+					}
+					if strings.Contains(cellValue, "sixbedroom") {
+						row[colIndex] = "6 BR"
+					}
+
+					if strings.Contains(cellValue, "studio") {
+						row[colIndex] = "Studio"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
 }
