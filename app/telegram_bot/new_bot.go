@@ -12,19 +12,6 @@ package telegram_bot
 //	"strings"
 //)
 //
-//package telegram_bot
-//
-//import (
-//"bytes"
-//"fmt"
-//"genieMap/cmd"
-//tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-//"log"
-//"os"
-//"strconv"
-//"strings"
-//)
-//
 //var serviceNum int
 //
 //type BotState struct {
@@ -125,83 +112,7 @@ package telegram_bot
 //
 //	for update := range updates {
 //		if update.Message != nil {
-//			handleMessage(bot, update.Message)
-//		}
-//
-//		message := strings.ToLower(update.Message.Text)
-//		chatID := update.Message.Chat.ID
-//
-//		//if update.Message.IsCommand() {
-//		//	switch update.Message.Command() {
-//		//	case "start":
-//		//		sendStartButton(bot, chatID)
-//		//		sendServiceList(bot, chatID)
-//		//	case "stop":
-//		//		msg := tgbotapi.NewMessage(chatID, "Бот НЕ прекратил ответы на команды")
-//		//		bot.Send(msg)
-//		//		continue //
-//		//	}
-//		//}
-//
-//		if isServiceNumber(message) {
-//			serviceNumber, _ := strconv.Atoi(message)
-//
-//			if isValidService(serviceNumber) {
-//				state.ServiceNum = serviceNumber
-//
-//				serviceName := getServiceName(serviceNumber)
-//				msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Вы выбрали сервис %s", serviceName))
-//				bot.Send(msg)
-//
-//				fileFormat := getServiceFileFormat(serviceNumber)
-//				msg = tgbotapi.NewMessage(chatID, fmt.Sprintf("Пришлите файл в формате %s", fileFormat))
-//				bot.Send(msg)
-//			} else {
-//				msg := tgbotapi.NewMessage(chatID, "Некорректный выбор сервиса")
-//				bot.Send(msg)
-//			}
-//		}
-//
-//		if update.Message.Document != nil {
-//			if state.ServiceNum == 0 {
-//				msg := tgbotapi.NewMessage(chatID, "Сначала напишите номер сервиса")
-//				bot.Send(msg)
-//			} else {
-//				switch state.ServiceNum {
-//				case 1:
-//					getServiceAlDar(update.Message, bot)
-//				case 2:
-//					getServiceTownX(update.Message, bot)
-//				case 3:
-//					getServiceCondor(update.Message, bot)
-//				case 4:
-//					getServiceSiadah(update.Message, bot)
-//				case 5:
-//					getServiceBinghatii(update.Message, bot)
-//				case 6:
-//					getServiceDeyaar(update.Message, bot)
-//				case 7:
-//					getServiceEmaar(update.Message, bot)
-//				case 8:
-//					getServiceEllingtonProperties(update.Message, bot)
-//				case 9:
-//					getServiceAzizi(update.Message, bot)
-//				case 10:
-//					getServiceReportageProperties(update.Message, bot)
-//				case 11:
-//					getServiceCondor8Cols(update.Message, bot)
-//				case 12:
-//					getServiceTiger(update.Message, bot)
-//				case 13:
-//					getServiceSothobys(update.Message, bot)
-//				case 14:
-//					getServiceObject1(update.Message, bot)
-//				case 15:
-//					getServiceSwiss(update.Message, bot)
-//				case 16:
-//					getServiceVincitore(update.Message, bot)
-//				}
-//			}
+//			handleMessage(bot, update.Message, state)
 //		}
 //	}
 //}
@@ -260,7 +171,7 @@ package telegram_bot
 //
 //func sendStartButton(bot *tgbotapi.BotAPI, chatID int64) {
 //	msg := tgbotapi.NewMessage(chatID, "Выбери сервис (цифру)")
-//	startButton := tgbotapi.NewKeyboardButton("/start")
+//	startButton := tgbotapi.NewKeyboardButton("Список застройщиков")
 //
 //	keyboard := tgbotapi.NewReplyKeyboard(
 //		tgbotapi.NewKeyboardButtonRow(startButton),
@@ -273,31 +184,156 @@ package telegram_bot
 //func handleAllClearCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
 //	replyMsg := tgbotapi.NewMessage(message.Chat.ID, "Рота, ОТБОЙ! Играем в 3 скрипа")
 //
-//	// Завершение работы бота
-//	// Создание кнопки "/start"
-//	startButton := tgbotapi.NewKeyboardButton("/start")
+//	startButton := tgbotapi.NewKeyboardButton("Список застройщиков")
 //
-//	// Создание клавиатуры и добавление кнопок
 //	keyboard := tgbotapi.NewReplyKeyboard(
 //		tgbotapi.NewKeyboardButtonRow(startButton),
 //	)
 //
-//	// Прикрепление клавиатуры к сообщению
 //	replyMsg.ReplyMarkup = keyboard
 //	bot.Send(replyMsg)
 //}
 //
-//func handleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+//func handleMessage(bot *tgbotapi.BotAPI, message *tgbotapi.Message, state *BotState) {
 //	switch message.Text {
-//	case "/start":
+//	case "Список застройщиков":
 //		sendStartButton(bot, message.Chat.ID)
 //		sendServiceList(bot, message.Chat.ID)
 //	case "Отбой":
 //		handleAllClearCommand(bot, message)
-//		//case "Ничем":
-//		//	handleNothingCommand(bot, message)
-//		//default:
-//		//	handleDefaultMessage(bot, message, photoPath)
+//	default:
+//		handleDefaultMessage(bot, message, state)
 //	}
 //}
 //
+//func handleDefaultMessage(bot *tgbotapi.BotAPI, updateMessage *tgbotapi.Message, state *BotState) {
+//
+//	messageString := strings.ToLower(updateMessage.Text)
+//	chatID := updateMessage.Chat.ID
+//
+//	if isServiceNumber(messageString) {
+//		serviceNumber, _ := strconv.Atoi(messageString)
+//
+//		if isValidService(serviceNumber) {
+//			state.ServiceNum = serviceNumber
+//
+//			serviceName := getServiceName(serviceNumber)
+//			msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("Вы выбрали сервис %s", serviceName))
+//			bot.Send(msg)
+//
+//			fileFormat := getServiceFileFormat(serviceNumber)
+//			msg = tgbotapi.NewMessage(chatID, fmt.Sprintf("Пришлите файл в формате %s", fileFormat))
+//			bot.Send(msg)
+//		} else {
+//			msg := tgbotapi.NewMessage(chatID, "Некорректный выбор сервиса")
+//			bot.Send(msg)
+//		}
+//	}
+//
+//	if updateMessage.Document != nil {
+//		if state.ServiceNum == 0 {
+//			msg := tgbotapi.NewMessage(chatID, "Сначала напишите номер сервиса")
+//			bot.Send(msg)
+//		}
+//		switch state.ServiceNum {
+//		case 1:
+//			getServiceAlDar(updateMessage, bot)
+//		case 2:
+//			getServiceTownX(updateMessage, bot)
+//		case 3:
+//			getServiceCondor(updateMessage, bot)
+//			handleNothingCommand(bot, updateMessage)
+//		case 4:
+//			getServiceSiadah(updateMessage, bot)
+//		case 5:
+//			getServiceBinghatii(updateMessage, bot)
+//		case 6:
+//			getServiceDeyaar(updateMessage, bot)
+//		case 7:
+//			getServiceEmaar(updateMessage, bot)
+//		case 8:
+//			getServiceEllingtonProperties(updateMessage, bot)
+//		case 9:
+//			getServiceAzizi(updateMessage, bot)
+//		case 10:
+//			getServiceReportageProperties(updateMessage, bot)
+//		case 11:
+//			getServiceCondor8Cols(updateMessage, bot)
+//		case 12:
+//			getServiceTiger(updateMessage, bot)
+//		case 13:
+//			getServiceSothobys(updateMessage, bot)
+//		case 14:
+//			getServiceObject1(updateMessage, bot)
+//		case 15:
+//			getServiceSwiss(updateMessage, bot)
+//		case 16:
+//			getServiceVincitore(updateMessage, bot)
+//		}
+//	} else if updateMessage.Text != "" {
+//		//handleAllClearCommand(bot, updateMessage)
+//		sendDefaultMessageTest(bot, updateMessage.Chat.ID)
+//
+//	} else {
+//		//sendDefaultMessage(bot, updateMessage.Chat.ID)
+//		sendDefaultMessageTest(bot, updateMessage.Chat.ID)
+//	}
+//}
+//
+//func sendDefaultMessage(bot *tgbotapi.BotAPI, chatID int64) {
+//	msg := tgbotapi.NewMessage(chatID, "Я могу принимать файлы, но не могу с вами общаться 😔\nМогу вам помочь с рефактором вашего файла? 🥺")
+//	startButton := tgbotapi.NewKeyboardButton("Список застройщиков")
+//
+//	keyboard := tgbotapi.NewReplyKeyboard(
+//		tgbotapi.NewKeyboardButtonRow(startButton),
+//	)
+//	msg.ReplyMarkup = keyboard
+//
+//	bot.Send(msg)
+//}
+//
+//func sendErrorMessageFile(bot *tgbotapi.BotAPI, chatID int64) {
+//	msg := tgbotapi.NewMessage(chatID, "Требуется отправить файл")
+//	bot.Send(msg)
+//}
+//
+//func handleNothingCommand(bot *tgbotapi.BotAPI, message *tgbotapi.Message) {
+//	msg := tgbotapi.NewMessage(message.Chat.ID, "Чем еще могу помочь?")
+//	startButton := tgbotapi.NewKeyboardButton("Список застройщиков")
+//
+//	keyboard := tgbotapi.NewReplyKeyboard(
+//		tgbotapi.NewKeyboardButtonRow(startButton),
+//	)
+//	msg.ReplyMarkup = keyboard
+//
+//	bot.Send(msg)
+//}
+//
+//func sendNoActionInlineButton(bot *tgbotapi.BotAPI, chatID int64, messageID int) {
+//	buttonText := "Нет действия"
+//	buttonData := "no_action"
+//	button := tgbotapi.NewInlineKeyboardButtonData(buttonText, buttonData)
+//	row := tgbotapi.NewInlineKeyboardRow(button)
+//	inlineKeyboard := tgbotapi.NewInlineKeyboardMarkup(row)
+//
+//	editMsg := tgbotapi.NewEditMessageReplyMarkup(chatID, messageID, inlineKeyboard)
+//	bot.Send(editMsg)
+//}
+//
+//func sendDefaultMessageTest(bot *tgbotapi.BotAPI, chatID int64) {
+//	startButton := tgbotapi.NewKeyboardButton("Список застройщиков")
+//
+//	keyboard := tgbotapi.NewReplyKeyboard(
+//		tgbotapi.NewKeyboardButtonRow(startButton),
+//	)
+//
+//	// Очистка предыдущих сообщений и клавиатур в чате
+//	clearMsg := tgbotapi.NewMessage(chatID, "")
+//	clearMsg.ReplyMarkup = tgbotapi.NewRemoveKeyboard(true)
+//	bot.Send(clearMsg)
+//
+//	// Отправка клавиатуры с кнопкой "Список застройщиков"
+//	msg := tgbotapi.NewMessage(chatID, "")
+//	msg.ReplyMarkup = keyboard
+//	bot.Send(msg)
+//}
