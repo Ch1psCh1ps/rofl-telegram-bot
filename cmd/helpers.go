@@ -372,3 +372,16 @@ func RemoveFirstRowFromExcelFile(file *excelize.File) error {
 
 	return nil
 }
+
+//Primer ispolzovaniya(zadel pod novuu func)
+//sheetRowsToDelete := map[string]int{
+//	"Sheet1": 2,
+//	"Sheet2": 4,
+//}
+//
+//err := RemoveRowsFromExcelFile(file, sheetRowsToDelete)
+//if err != nil {
+//	// Обработка ошибки
+//	fmt.Println("Ошибка при удалении строк из файла:", err)
+//	return err
+//}
