@@ -332,3 +332,43 @@ func GetData(fileContent []byte) *excelize.File {
 	}
 	return data
 }
+
+func RemoveFirstRowFromExcelFile(file *excelize.File) error {
+	// Получаем список листов в файле
+	sheets := file.GetSheetList()
+
+	// Перебираем каждый лист
+	for _, sheet := range sheets {
+		// Получаем содержимое всех строк на листе
+		rows, err := file.GetRows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Удаляем первую строку путем создания нового среза без первой строки
+		newRows := rows[1:]
+
+		// Очищаем все строки на листе
+		for i := len(rows); i > 0; i-- {
+			err = file.RemoveRow(sheet, i)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Записываем обновленные строки на лист
+		for i, newRow := range newRows {
+			rowIndex := i + 1
+			for j, cellValue := range newRow {
+				colIndex, _ := excelize.ColumnNumberToName(j + 1)
+				cell := fmt.Sprintf("%s%d", colIndex, rowIndex)
+				err = file.SetCellValue(sheet, cell, cellValue)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
