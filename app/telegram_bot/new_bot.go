@@ -341,3 +341,78 @@ package telegram_bot
 //	msg.ReplyMarkup = keyboard
 //	bot.Send(msg)
 //}
+
+//package main
+//
+//import (
+//	"genieMap/cmd"
+//	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+//	"log"
+//	"os"
+//	"os/signal"
+//	"syscall"
+//)
+//
+//func main() {
+//	bot, err := GetBot()
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//
+//	updates := make(chan tgbotapi.Update, 100)
+//
+//	go func() {
+//		for update := range bot.GetUpdatesChan(tgbotapi.NewUpdate(0)) {
+//			updates <- update
+//		}
+//	}()
+//
+//	// Обработка входящих обновлений
+//	for update := range updates {
+//		go handleUpdate(bot, update)
+//	}
+//
+//	// Перехватываем сигналы ОС для корректного завершения работы бота
+//	stop := make(chan os.Signal, 1)
+//	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+//	<-stop
+//}
+//
+//// GetBot создает и возвращает экземпляр бота
+//func GetBot() (*tgbotapi.BotAPI, error) {
+//	cmd.LoadEnv()
+//	apiToken := os.Getenv("TELEGRAM_BOT_TOKEN")
+//	//apiToken := os.Getenv("TELEGRAM_BOT_TOKEN_MINION")
+//	bot, err := tgbotapi.NewBotAPI(apiToken)
+//	if err != nil {
+//		log.Panic(err)
+//	}
+//
+//	// Настройка параметров бота
+//	bot.Debug = true
+//
+//	log.Printf("Authorized on account %s", bot.Self.UserName)
+//
+//	return bot, nil
+//}
+//
+//func handleUpdate(bot *tgbotapi.BotAPI, update tgbotapi.Update) {
+//	// Обработка входящего обновления
+//	if update.Message != nil {
+//		// Получение информации о пользователе и текста сообщения
+//		userID := update.Message.From.ID
+//		username := update.Message.From.UserName
+//		messageText := update.Message.Text
+//
+//		log.Printf("Received message from %s (ID: %d): %s", username, userID, messageText)
+//
+//		// Отправка ответа пользователю
+//		reply := "Привет, " + username + "! Ты сказал: " + messageText
+//		msg := tgbotapi.NewMessage(update.Message.Chat.ID, reply)
+//
+//		_, err := bot.Send(msg)
+//		if err != nil {
+//			log.Println("Error sending message:", err)
+//		}
+//	}
+//}
