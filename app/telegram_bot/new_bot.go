@@ -103,16 +103,20 @@ package telegram_bot
 //
 //	log.Printf("Authorized on account %s", bot.Self.UserName)
 //
-//	u := tgbotapi.NewUpdate(0)
-//	u.Timeout = 60
-//
-//	updates := bot.GetUpdatesChan(u)
+//	updates := bot.GetUpdatesChan(tgbotapi.UpdateConfig{
+//		Offset:  0,
+//		Timeout: 60,
+//	})
+//	//u := tgbotapi.NewUpdate(0)
+//	//u.Timeout = 60
+//	//
+//	//updates := bot.GetUpdatesChan(u)
 //
 //	state := &BotState{} // Состояние бота
 //
 //	for update := range updates {
 //		if update.Message != nil {
-//			handleMessage(bot, update.Message, state)
+//			go handleMessage(bot, update.Message, state)
 //		}
 //	}
 //}
