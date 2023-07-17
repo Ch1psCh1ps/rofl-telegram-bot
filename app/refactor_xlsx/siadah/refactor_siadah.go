@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func DoBookCSV(path string) (*bytes.Buffer, error) {
@@ -53,6 +54,9 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	setColumnValues(newXlsxFile, []string{}, "E") //type
 	setColumnValues(newXlsxFile, cols[3], "F")    //layout
 	setColumnValues(newXlsxFile, cols[8], "G")    //views
+
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 
@@ -120,4 +124,121 @@ func LogError(format string, v ...interface{}) {
 
 	log.SetOutput(file)
 	log.Printf(format, v...)
+}
+
+func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for i, cellValue := range row {
+				if cellValue == row[colIndex] {
+					cellValue = strings.ToLower(cellValue)
+					arrayLayout := strings.Split(cellValue, " ")
+					for _, arrayValue := range arrayLayout {
+						valueInt, errAtoi := strconv.Atoi(arrayValue)
+						if errAtoi == nil {
+							row[colIndex] = strconv.Itoa(valueInt)
+						}
+					}
+
+					if strings.Contains(cellValue, "simplex") {
+						if i >= 2 {
+							row[i-2] = "Simplex"
+							cellValue = strings.ReplaceAll(cellValue, "simplex", "")
+						}
+					}
+					if strings.Contains(cellValue, "duplex") /*|| strings.Contains(cellValue, "loft")*/ {
+						if i >= 2 {
+							row[i-2] = "Duplex"
+							cellValue = strings.ReplaceAll(cellValue, "duplex", "")
+						}
+					}
+					if strings.Contains(cellValue, "triplex") {
+						if i >= 2 {
+							row[i-2] = "Triplex"
+							cellValue = strings.ReplaceAll(cellValue, "triplex", "")
+						}
+					}
+					if strings.Contains(cellValue, "quadruplex") {
+						if i >= 2 {
+							row[i-2] = "Quadruplex"
+							cellValue = strings.ReplaceAll(cellValue, "quadruplex", "")
+						}
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					wordArraay := strings.Split(cellValue, "-")
+					row[colIndex] = wordArraay[len(wordArraay)-1]
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
 }
