@@ -374,18 +374,14 @@ func replaceUnitLayoutDescriptionFieldInXLSX(file *excelize.File, indexOfCell in
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
 					// Заменяем значение ячейки на замену
-					words1 := strings.Split(row[colIndex], ",")
+					cellValueArray := strings.Split(cellValue, " ")
 
-					for i, word1 := range words1 {
-						if strings.Contains(word1, "&") || strings.Contains(word1, "/") {
-							words1[i] = strings.Replace(word1, "/", " or ", -1)
+					for _, value := range cellValueArray {
+						valueToInt, errToInt := strconv.Atoi(value)
+						if errToInt == nil {
+							row[colIndex] = strconv.Itoa(valueToInt) + " BR"
 						}
 					}
-
-					word := strings.Join(words1, ",")
-					word = strings.Replace(word, "+", "/", -1)
-					word = strings.Replace(word, ",", "/", -1)
-					row[colIndex] = word
 
 					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -394,7 +390,7 @@ func replaceUnitLayoutDescriptionFieldInXLSX(file *excelize.File, indexOfCell in
 					}
 
 					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
 					}
