@@ -7,7 +7,6 @@ import (
 	"genieMap/cmd"
 	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -50,6 +49,8 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	ReplaceXLSXLayout(newXlsxFile, 5)
 	ReplaceXLSXType(newXlsxFile, 4)
 	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
+	replaceUnitSquareFieldInXLSX(newXlsxFile, 2)
+	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
@@ -116,6 +117,54 @@ func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
 			}
 
 			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitSquareFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					feet, errToFeet := cmd.SquareMetersToSquareFeet(cellValue)
+
+					if errToFeet != nil {
+						return errToFeet
+					}
+
+					row[colIndex] = feet
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
 			rowIndex++
 		}
 	}
@@ -310,67 +359,6 @@ func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	return nil
 }
 
-func ReplaceNumberXLSX(file *excelize.File) error {
-	sheets := file.GetSheetList()
-
-	// Обрабатываем каждый лист
-	for _, sheet := range sheets {
-		rows, err := file.Rows(sheet)
-		if err != nil {
-			return err
-		}
-
-		rowIndex := 1
-
-		for rows.Next() {
-			row, err2 := rows.Columns()
-			if err2 != nil {
-				return err2
-			}
-
-			for colIndex, cellValue := range row {
-				if cellValue == row[colIndex] {
-					word := strings.Split(row[colIndex], "_")
-					row[colIndex] = word[len(word)-1]
-
-					// Получаем имя столбца на основе индекса столбца
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
-
-					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
-					if err1 != nil {
-						return err1
-					}
-					break
-				}
-			}
-
-			// Увеличиваем индекс строки
-			rowIndex++
-		}
-	}
-
-	return nil
-}
-
-func downloadFile(url string) ([]byte, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	fileContent, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return fileContent, nil
-}
-
 func GetSheet(data *excelize.File, sheetName string) ([][]string, error) {
 	cols, err := data.GetCols(sheetName)
 	if err != nil {
@@ -489,50 +477,4 @@ func convertXlsxToCsv(inputFile *excelize.File) (*bytes.Buffer, error) {
 	}
 
 	return buf, nil
-}
-
-func DownloadFileFromTelegramBot(token, fileID, filePath string) ([]byte, error) {
-	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s", token, fileID)
-	response, err := http.Get(apiURL)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось получить информацию о файле: %v", err)
-	}
-	defer response.Body.Close()
-
-	// Чтение ответа в формате JSON
-	// Здесь вам потребуется ваша собственная логика для извлечения информации о файле
-	// из ответа Telegram API, чтобы получить ссылку на файл
-
-	fileURL := "https://api.telegram.org/file/bot" + token + "/" + filePath
-
-	// Загрузка файла
-	fileResponse, err := http.Get(fileURL)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось загрузить файл: %v", err)
-	}
-	defer fileResponse.Body.Close()
-
-	// Чтение содержимого файла в []byte
-	fileContent, err := ioutil.ReadAll(fileResponse.Body)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось прочитать содержимое файла: %v", err)
-	}
-
-	return fileContent, nil
-}
-
-func SaveXLSXFile(file *excelize.File, outputPath string) error {
-	if err := file.SaveAs(outputPath); err != nil {
-		return fmt.Errorf("не удалось сохранить файл XLSX: %v", err)
-	}
-	return nil
-}
-
-func GetDataFromBytes(fileContent []byte) *excelize.File {
-	buffer := bytes.NewBuffer(fileContent)
-	data, err := excelize.OpenReader(buffer)
-	if err != nil {
-		LogError("%v", err)
-	}
-	return data
 }

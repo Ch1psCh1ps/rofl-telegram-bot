@@ -373,6 +373,34 @@ func RemoveFirstRowFromExcelFile(file *excelize.File) error {
 	return nil
 }
 
+func SquareMetersToSquareFeet(squareMeters string) (string, error) {
+	// Заменяем запятую на точку, если она есть в строке
+	squareMeters = replaceComma(squareMeters)
+
+	// Преобразуем строку с метрами квадратными во float64
+	meters, err := strconv.ParseFloat(squareMeters, 64)
+	if err != nil {
+		return "", err
+	}
+
+	// Выполняем пересчет в квадратные футы
+	feet := meters * 10.7639
+
+	// Форматируем результат как строку и возвращаем его
+	return fmt.Sprintf("%.2f", feet), nil
+}
+
+// Функция для замены запятой на точку в строке, если она есть
+func replaceComma(s string) string {
+	return strconv.FormatFloat(toFloat64(s), 'f', -1, 64)
+}
+
+// Вспомогательная функция для преобразования строки во float64
+func toFloat64(s string) float64 {
+	f, _ := strconv.ParseFloat(s, 64)
+	return f
+}
+
 //Primer ispolzovaniya(zadel pod novuu func)
 //sheetRowsToDelete := map[string]int{
 //	"Sheet1": 2,
