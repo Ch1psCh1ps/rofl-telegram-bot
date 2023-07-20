@@ -89,6 +89,7 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
 	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
+	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	return nil
 }

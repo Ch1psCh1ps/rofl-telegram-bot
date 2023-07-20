@@ -13,91 +13,6 @@ import (
 	"strings"
 )
 
-//func DoBookCSV(path string) (*bytes.Buffer, error) {
-//	fileContent, downloadFileErr := downloadFile(path)
-//	if downloadFileErr != nil {
-//		LogError("Ошибка при загрузке файла: %v", downloadFileErr)
-//		return nil, downloadFileErr
-//	}
-//
-//	data := GetDataFromBytes(fileContent)
-//
-//	sheetName := data.GetSheetName(0)
-//
-//	cols, sheetErr := GetSheet(data, sheetName)
-//	if sheetErr != nil {
-//		LogError("Ошибка при получении листа из файла XLSX: %v", sheetErr)
-//		cols, sheetErr = GetSheet(data, "Sheet1")
-//		if sheetErr != nil {
-//			LogError("Ошибка при получении листа из файла XLSX: %v", sheetErr)
-//			return nil, sheetErr
-//		}
-//	}
-//
-//	defer func() {
-//		if err := data.Close(); err != nil {
-//			LogError("%v", err)
-//		}
-//	}()
-//
-//	newXlsxFile := excelize.NewFile()
-//
-//	defer func() {
-//		if err := newXlsxFile.Close(); err != nil {
-//			LogError("%v", err)
-//		}
-//	}()
-//
-//	for i, col := range cols {
-//		for _, colName := range col {
-//			switch colName {
-//			case "Unit Code":
-//				setColumnValues(newXlsxFile, cols[i], "A") //number
-//			case "Target Unit Price":
-//				setColumnValues(newXlsxFile, cols[i], "B") //price
-//			case "Total Area":
-//				setColumnValues(newXlsxFile, cols[i], "C") //Square
-//			case "Unit Type":
-//				setColumnValues(newXlsxFile, cols[i], "F") //layout
-//				//replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
-//			case "Description":
-//				setColumnValues(newXlsxFile, cols[i], "F") //layout
-//				//replaceUnitLayoutDescriptionFieldInXLSX(newXlsxFile, 5)
-//			case "View":
-//				setColumnValues(newXlsxFile, cols[i], "G") //views
-//			}
-//		}
-//	}
-//	setColumnValues(newXlsxFile, []string{}, "E") //type
-//	setColumnValues(newXlsxFile, []string{}, "D") //height
-//
-//	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
-//	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
-//
-//	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
-//
-//	if err3 != nil {
-//		LogError("Ошибка при конвертации XLSX в CSV: %v", err3)
-//		return nil, err3
-//	}
-//
-//	refactorFile, errRefactor := cmd.RemoveAnyRowFromCSV(buffer, 2)
-//
-//	if errRefactor != nil {
-//		LogError("%v", errRefactor)
-//		return nil, errRefactor
-//	}
-//
-//	buf, errFirstRow := cmd.UpdateFirstRowInCSV(refactorFile, _struct.GetNameFirstRow())
-//	if errFirstRow != nil {
-//		LogError("Ошибка при добавлении строки", errFirstRow)
-//
-//		return nil, errFirstRow
-//	}
-//
-//	return buf, nil
-//}
-
 func DoBookCSV(path string, sheetName string) (*bytes.Buffer, error) {
 	fileContent, downloadFileErr := downloadFile(path)
 	if downloadFileErr != nil {
@@ -187,7 +102,8 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
 	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
-
+	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
+	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	return nil
@@ -389,6 +305,94 @@ func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 			}
 
 			// Увеличиваем индекс строки
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					if cellValue == "" {
+						row[colIndex] = "Simplex"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
+func replaceUnitTypeFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					if cellValue == "" {
+						row[colIndex] = "Apartments"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
 			rowIndex++
 		}
 	}
