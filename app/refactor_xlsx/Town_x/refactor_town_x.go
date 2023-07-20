@@ -3,6 +3,7 @@ package Town_x
 import (
 	"bytes"
 	"genieMap/cmd"
+	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
 	"io/ioutil"
 	"log"
@@ -71,7 +72,14 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		return nil, errRefactor
 	}
 
-	return refactorFile, nil
+	buf, errFirstRow := cmd.UpdateFirstRowInCSV(refactorFile, _struct.GetNameFirstRow())
+	if errFirstRow != nil {
+		LogError("Ошибка при добавлении строки", errFirstRow)
+
+		return nil, errFirstRow
+	}
+
+	return buf, nil
 }
 
 func downloadFile(url string) ([]byte, error) {

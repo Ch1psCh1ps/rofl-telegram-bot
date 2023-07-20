@@ -252,6 +252,20 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					if cellValue == "s" {
 						row[colIndex] = "Studio"
 					} else {
+						switch cellValue {
+						case "1,5":
+							cellValue = "1"
+						case "2,5":
+							cellValue = "2"
+						case "3,5":
+							cellValue = "3"
+						case "4,5":
+							cellValue = "4"
+						case "5,5":
+							cellValue = "5"
+						case "6,5":
+							cellValue = "6"
+						}
 						row[colIndex] = cellValue + " BR"
 					}
 
