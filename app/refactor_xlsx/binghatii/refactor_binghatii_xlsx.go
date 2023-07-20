@@ -186,6 +186,9 @@ func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, shee
 
 	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
 	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+
+	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	return nil
 }
@@ -212,14 +215,6 @@ func GetDataFromBytes(fileContent []byte) *excelize.File {
 		LogError("%v", err)
 	}
 	return data
-}
-
-func GetSheet(data *excelize.File, sheetName string) ([][]string, error) {
-	cols, err := data.GetCols(sheetName)
-	if err != nil {
-		return nil, err
-	}
-	return cols, nil
 }
 
 func setColumnValues(file *excelize.File, values []string, colPrefix string) {
@@ -314,10 +309,9 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 				if cellValue != "Unit Type" {
 					if cellValue == row[colIndex] {
 						// Заменяем значение ячейки на замену
-						words1 := strings.Split(row[colIndex], "-")
-						replaceBr := strings.Split(words1[1], " ")
+						words := strings.Split(row[colIndex], " ")
 
-						for _, num := range replaceBr {
+						for _, num := range words {
 							_, errCon := strconv.Atoi(num)
 							if errCon == nil {
 								row[colIndex] = num + " BR"
@@ -338,67 +332,6 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 				}
 			}
 
-			rowIndex++
-		}
-	}
-
-	return nil
-}
-
-func replaceUnitLayoutDescriptionFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
-	sheets := file.GetSheetList()
-
-	// Обрабатываем каждый лист
-	for _, sheet := range sheets {
-		// Получаем все строки в листе
-		rows, err := file.Rows(sheet)
-		if err != nil {
-			return err
-		}
-
-		// Инициализируем индекс строки
-		rowIndex := 1
-
-		// Перебираем каждую строку
-		for rows.Next() {
-			row, err2 := rows.Columns()
-			if err2 != nil {
-				return err2
-			}
-
-			colIndex := indexOfCell
-
-			// Перебираем каждую ячейку в строке
-			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					// Заменяем значение ячейки на замену
-					cellValueArray := strings.Split(cellValue, " ")
-
-					for _, value := range cellValueArray {
-						valueToInt, errToInt := strconv.Atoi(value)
-						if errToInt == nil {
-							row[colIndex] = strconv.Itoa(valueToInt) + " BR"
-						}
-					}
-
-					// Получаем имя столбца на основе индекса столбца
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
-
-					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
-					if err1 != nil {
-						return err1
-					}
-					break
-				}
-			}
-
-			// Увеличиваем индекс строки
 			rowIndex++
 		}
 	}

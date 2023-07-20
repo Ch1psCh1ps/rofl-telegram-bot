@@ -385,3 +385,29 @@ func RemoveFirstRowFromExcelFile(file *excelize.File) error {
 //	fmt.Println("Ошибка при удалении строк из файла:", err)
 //	return err
 //}
+
+func AddLastRowWithEmptyWord(f *excelize.File) error {
+	// Получаем номер последней строки в листе
+
+	sheetList := f.GetSheetList()
+
+	// Проходим по каждому листу и добавляем последнюю строку
+	for _, sheetName := range sheetList {
+
+		lastRow, err := f.GetRows(sheetName)
+		if err != nil {
+			return err
+		}
+
+		// Получаем номер следующей строки
+		nextRow := len(lastRow) + 1
+
+		// Добавляем новую строку
+		err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", nextRow), "empty")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
