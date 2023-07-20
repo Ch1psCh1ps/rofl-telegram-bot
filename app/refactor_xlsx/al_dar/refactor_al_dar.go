@@ -50,6 +50,7 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	ReplaceXLSXType(newXlsxFile, 4)
 	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
 	replaceUnitSquareFieldInXLSX(newXlsxFile, 2)
+	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
 	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
@@ -67,6 +68,50 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	}
 
 	return buffer, nil
+}
+
+func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					if cellValue == "" {
+						row[colIndex] = "Simplex"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
 }
 
 func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
@@ -263,7 +308,7 @@ func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
 					word := strings.ToLower(cellValue)
 					switch word {
 					case "apartment":
-						word = "apartments"
+						word = "Apartments"
 					}
 					row[colIndex] = word
 
