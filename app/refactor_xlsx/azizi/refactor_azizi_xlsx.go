@@ -178,13 +178,21 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			colIndex := indexOfCell
 
-			for _, cellValue := range row {
+			for i, cellValue := range row {
 				if cellValue == row[colIndex] {
-					word := strings.ReplaceAll(cellValue, "\nBedroom", " BR")
-					row[colIndex] = word
+					cellValue = strings.ToLower(cellValue)
+					row[colIndex] = strings.ReplaceAll(cellValue, "\nbedroom", " BR")
 
-					if strings.Contains(cellValue, "SHOP") {
-						row[colIndex] = ""
+					if strings.Contains(cellValue, "shop") {
+						row[colIndex] = "retail"
+						if i >= 1 {
+							row[i-1] = "commerce"
+							cellValue = strings.ReplaceAll(cellValue, "commerce", "")
+						}
+						if i >= 2 {
+							row[i-2] = "shop"
+							cellValue = strings.ReplaceAll(cellValue, "shop", "")
+						}
 					}
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -192,9 +200,29 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 						return err1
 					}
 
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
+					}
+
+					columnName1, err3 := excelize.ColumnNumberToName(i)
+					if err1 != nil {
+						return err1
+					}
+
+					err3 = file.SetCellValue(sheet, columnName1+strconv.Itoa(rowIndex), row[i-1])
+					if err3 != nil {
+						return err3
+					}
+
+					columnName2, err4 := excelize.ColumnNumberToName(i - 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err4 = file.SetCellValue(sheet, columnName2+strconv.Itoa(rowIndex), row[i-2])
+					if err4 != nil {
+						return err4
 					}
 					break
 				}
@@ -285,6 +313,8 @@ func replaceUnitTypeFieldInXLSX(file *excelize.File, indexOfCell int) error {
 					switch cellValue {
 					case "apartment":
 						row[colIndex] = "Apartments"
+					case "commerce":
+						row[colIndex] = "commerce"
 					}
 
 					if cellValue == "" {
@@ -331,8 +361,13 @@ func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					if cellValue == "" {
+					cellValue = strings.ToLower(cellValue)
+
+					switch cellValue {
+					case "":
 						row[colIndex] = "Simplex"
+					case "shop":
+						row[colIndex] = ""
 					}
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
