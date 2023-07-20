@@ -2,7 +2,6 @@ package emaar
 
 import (
 	"bytes"
-	"fmt"
 	"genieMap/cmd"
 	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
@@ -68,8 +67,6 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	}
 
 	addFirstRow, errAddFirstRow := cmd.AddEmptyFirstLine(buffer)
-
-	fmt.Println(addFirstRow)
 
 	if errAddFirstRow != nil {
 		LogError("Ошибка добавления пустой строки", errAddFirstRow)

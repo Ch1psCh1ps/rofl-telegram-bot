@@ -179,6 +179,17 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 						row[colIndex] = "Studio"
 					}
 
+					if !strings.Contains(row[colIndex], "BR") || !strings.Contains(row[colIndex], "Studio") {
+						cellValueArray := strings.Split(cellValue, " ")
+
+						for _, value := range cellValueArray {
+							valueToInt, errToInt := strconv.Atoi(value)
+							if errToInt == nil {
+								row[colIndex] = strconv.Itoa(valueToInt) + " BR"
+							}
+						}
+					}
+
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
 					if err1 != nil {
 						return err1
