@@ -115,8 +115,6 @@ func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
 }
 
 func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
 	// Обрабатываем каждый лист
