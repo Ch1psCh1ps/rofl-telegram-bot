@@ -2,6 +2,7 @@ package telegram_bot
 
 import (
 	"genieMap/app/refactor_xlsx/Condor"
+	"genieMap/app/refactor_xlsx/MAg"
 	"genieMap/app/refactor_xlsx/Town_x"
 	"genieMap/app/refactor_xlsx/al_dar"
 	"genieMap/app/refactor_xlsx/azizi"
@@ -573,6 +574,72 @@ func getServiceVincitore(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
 		}
 		sendUpdateMessage(bot, message.Chat.ID)
 		sendAttentionMessage(bot, message.Chat.ID)
+	} else {
+		errMsg(bot, message.Chat.ID)
+	}
+}
+
+//func getServiceMag(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+//	if message.Document != nil {
+//		fileID := message.Document.FileID
+//		fileURL, err := bot.GetFileDirectURL(fileID)
+//		fileName := message.Document.FileName
+//		fileNameArray := strings.Split(fileName, ".")
+//		fileName = fileNameArray[0]
+//		if err != nil {
+//			log.Printf("Ошибка при получении файла: %v", err)
+//			return
+//		}
+//
+//		sendProcessingMessage(bot, message.Chat.ID)
+//
+//		fileContent, downloadFileErr := cmd.DownloadFile(fileURL)
+//		if downloadFileErr != nil {
+//			log.Printf("Ошибка при загрузке файла: %v", downloadFileErr)
+//		}
+//
+//		data := cmd.GetData(fileContent)
+//
+//		sheetList := data.GetSheetList()
+//		for _, sheetName := range sheetList {
+//			xlsxBuffer, err4 := MAg.DoBookCSV(fileURL, sheetName)
+//			if err4 != nil {
+//				log.Printf("Ошибка при обработке файла: %v", err)
+//				return
+//			}
+//
+//			//sendUpdateMessage(bot, message.Chat.ID)
+//			sendCSVFile(bot, message.Chat.ID, xlsxBuffer, sheetName)
+//		}
+//		sendUpdateMessage(bot, message.Chat.ID)
+//		sendAttentionMessage(bot, message.Chat.ID)
+//	} else {
+//		errMsg(bot, message.Chat.ID)
+//	}
+//}
+
+func getServiceMag(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
+	if message.Document != nil {
+		fileID := message.Document.FileID
+		fileURL, err := bot.GetFileDirectURL(fileID)
+		fileName := message.Document.FileName
+		fileNameArray := strings.Split(fileName, ".")
+		fileName = fileNameArray[0]
+		if err != nil {
+			log.Printf("Ошибка при получении файла: %v", err)
+			return
+		}
+
+		sendProcessingMessage(bot, message.Chat.ID)
+
+		xlsxBuffer, err := MAg.DoBookCSV(fileURL)
+		if err != nil {
+			log.Printf("Ошибка при обработке файла: %v", err)
+			return
+		}
+
+		sendUpdateMessage(bot, message.Chat.ID)
+		sendCSVFile(bot, message.Chat.ID, xlsxBuffer, fileName)
 	} else {
 		errMsg(bot, message.Chat.ID)
 	}

@@ -35,6 +35,7 @@ func getServices() []string {
 		"Object 1",
 		"Swiss",
 		"Vincitore",
+		"MAg",
 	}
 
 	return services
@@ -83,6 +84,8 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 15:
 		return "XLSX"
 	case 16:
+		return "XLSX"
+	case 17:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -186,6 +189,8 @@ func GetBot() {
 					getServiceSwiss(update.Message, bot)
 				case 16:
 					getServiceVincitore(update.Message, bot)
+				case 17:
+					getServiceMag(update.Message, bot)
 				}
 			}
 		}
