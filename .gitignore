@@ -3,3 +3,5 @@
 
 # local logs
 refactor.log
+.idea
+.DS_Store

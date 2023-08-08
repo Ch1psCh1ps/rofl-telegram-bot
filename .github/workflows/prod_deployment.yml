@@ -1,0 +1,43 @@
+name: Deploy to server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: self-hosted
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build production image
+        run:  docker build -t ghcr.io/geniemap/minion-jerry:latest .
+
+  remove:
+    runs-on: self-hosted
+    needs: build
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Stop previous production container
+        run: docker rm -f geniemap-minion-jerry
+
+  create:
+    runs-on: self-hosted
+    needs: remove
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Up production container
+        run: docker run
+          --detach
+          --restart=on-failure:10
+          --name=geniemap-minion-jerry
+          --env TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ghcr.io/geniemap/minion-jerry:latest

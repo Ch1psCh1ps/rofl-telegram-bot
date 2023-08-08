@@ -1,4 +1,4 @@
-package ellingtonProperties
+package reportage_properties
 
 import (
 	"bytes"
@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func DoBookCSV(path string, sheetName string) (*bytes.Buffer, error) {
+func DoBookCSV(path string) (*bytes.Buffer, error) {
 	fileContent, downloadFileErr := downloadFile(path)
 	if downloadFileErr != nil {
 		LogError("Ошибка при загрузке файла: %v", downloadFileErr)
@@ -21,6 +21,26 @@ func DoBookCSV(path string, sheetName string) (*bytes.Buffer, error) {
 	}
 
 	data := GetDataFromBytes(fileContent)
+
+	sheetName := data.GetSheetName(0)
+
+	for i := 0; i < 5; i++ {
+		data.RemoveRow(sheetName, 1)
+	}
+
+	rows, _ := data.GetRows(sheetName)
+	data.RemoveRow(sheetName, len(rows))
+
+	for i, row := range rows {
+		for _, rowCell := range row {
+			if rowCell == "" {
+				data.RemoveRow(sheetName, i+1)
+			}
+		}
+	}
+
+	cols, _ := data.GetCols(sheetName)
+	data.RemoveCol(sheetName, "M")
 
 	defer func() {
 		if err := data.Close(); err != nil {
@@ -36,11 +56,16 @@ func DoBookCSV(path string, sheetName string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	err := ReplaceColumnsOnSheet(data, newXlsxFile, sheetName)
-	if err != nil {
-		LogError("Ошибка при замене колонок на странице %s: %v", sheetName, err)
-		return nil, err
-	}
+	setColumnValues(newXlsxFile, cols[1], "A")    //number 0
+	setColumnValues(newXlsxFile, cols[11], "B")   //price 1
+	setColumnValues(newXlsxFile, cols[9], "C")    //Square 2
+	setColumnValues(newXlsxFile, []string{}, "D") //height 3
+	setColumnValues(newXlsxFile, cols[5], "E")    //type 4
+	setColumnValues(newXlsxFile, cols[3], "F")    //layout 5
+	setColumnValues(newXlsxFile, cols[6], "G")    //views 6
+
+	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
+	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
 
 	buffer, err3 := cmd.ConvertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
@@ -51,47 +76,11 @@ func DoBookCSV(path string, sheetName string) (*bytes.Buffer, error) {
 	buf, errFirstRow := cmd.UpdateFirstRowInCSV(buffer, _struct.GetNameFirstRow())
 	if errFirstRow != nil {
 		LogError("Ошибка при добавлении строки", errFirstRow)
+
 		return nil, errFirstRow
 	}
 
 	return buf, nil
-}
-
-func ReplaceColumnsOnSheet(data *excelize.File, newXlsxFile *excelize.File, sheetName string) error {
-	cols, sheetErr := data.GetCols(sheetName)
-	rows, _ := data.GetRows(sheetName)
-
-	if sheetErr != nil {
-		return sheetErr
-	}
-
-	for _, row := range rows {
-		for i, cellValue := range row {
-			if strings.Contains(cellValue, "Unit Name") {
-				setColumnValues(newXlsxFile, cols[i], "A") //number
-			}
-			if strings.Contains(cellValue, "Unit Price") {
-				setColumnValues(newXlsxFile, cols[i], "B") //price
-			}
-			if strings.Contains(cellValue, "Total Area") && strings.Contains(cellValue, "Sq. Ft.") {
-				setColumnValues(newXlsxFile, cols[i], "C") //Square
-			}
-			setColumnValues(newXlsxFile, []string{}, "D") //height
-			setColumnValues(newXlsxFile, []string{}, "E") //type
-			if strings.Contains(cellValue, "Bedrooms") {
-				setColumnValues(newXlsxFile, cols[i], "F") //layout
-			}
-			setColumnValues(newXlsxFile, []string{}, "G") //views
-		}
-	}
-
-	replaceUnitNumberFieldInXLSX(newXlsxFile, 0)
-	replaceUnitLayoutFieldInXLSX(newXlsxFile, 5)
-	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
-	replaceUnitTypeFieldInXLSX(newXlsxFile, 4)
-	cmd.AddLastRowWithEmptyWord(newXlsxFile)
-
-	return nil
 }
 
 func downloadFile(url string) ([]byte, error) {
@@ -116,14 +105,6 @@ func GetDataFromBytes(fileContent []byte) *excelize.File {
 		LogError("%v", err)
 	}
 	return data
-}
-
-func GetSheet(data *excelize.File, sheetName string) ([][]string, error) {
-	cols, err := data.GetCols(sheetName)
-	if err != nil {
-		return nil, err
-	}
-	return cols, nil
 }
 
 func setColumnValues(file *excelize.File, values []string, colPrefix string) {
@@ -166,94 +147,14 @@ func replaceUnitLayoutFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					word := cellValue + " BR"
-					row[colIndex] = word
-
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
-
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
-					if err1 != nil {
-						return err1
-					}
-					break
-				}
-			}
-			rowIndex++
-		}
-	}
-
-	return nil
-}
-
-func replaceUnitNumberFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	sheets := file.GetSheetList()
-
-	for _, sheet := range sheets {
-		rows, err := file.Rows(sheet)
-		if err != nil {
-			return err
-		}
-
-		rowIndex := 1
-
-		for rows.Next() {
-			row, err2 := rows.Columns()
-			if err2 != nil {
-				return err2
-			}
-
-			colIndex := indexOfCell
-
-			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					word := strings.ReplaceAll(cellValue, "-", "")
-					row[colIndex] = word
-
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
-
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word)
-					if err1 != nil {
-						return err1
-					}
-					break
-				}
-			}
-			rowIndex++
-		}
-	}
-
-	return nil
-}
-
-func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
-	sheets := file.GetSheetList()
-
-	for _, sheet := range sheets {
-		rows, err := file.Rows(sheet)
-		if err != nil {
-			return err
-		}
-
-		rowIndex := 1
-
-		for rows.Next() {
-			row, err2 := rows.Columns()
-			if err2 != nil {
-				return err2
-			}
-
-			colIndex := indexOfCell
-
-			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					if cellValue == "" {
-						row[colIndex] = "Simplex"
+					//if strings.ContainsAny(cellValue, "Retail") {
+					//	row[colIndex] = strings.ReplaceAll(cellValue)
+					//}
+					arrayLayout := strings.Split(cellValue, " ")
+					for _, arrayValue := range arrayLayout {
+						if strings.Contains(arrayValue, "B") {
+							row[colIndex] = strings.ReplaceAll(arrayValue, "B", "BR")
+						}
 					}
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -296,8 +197,12 @@ func replaceUnitTypeFieldInXLSX(file *excelize.File, indexOfCell int) error {
 
 			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					if cellValue == "" {
-						row[colIndex] = "Apartments"
+
+					if strings.Contains(cellValue, "Duplex") {
+						row[colIndex] = "Duplex"
+					}
+					if strings.Contains(cellValue, "Simplex") {
+						row[colIndex] = "Simplex"
 					}
 
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)

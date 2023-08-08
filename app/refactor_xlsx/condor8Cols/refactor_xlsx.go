@@ -1,4 +1,4 @@
-package Condor
+package condor8Cols
 
 import (
 	"bytes"
@@ -47,8 +47,8 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	}()
 
 	setColumnValues(newXlsxFile, cols[0], "A")    //number
-	setColumnValues(newXlsxFile, cols[8], "B")    //price
-	setColumnValues(newXlsxFile, cols[6], "C")    //Square
+	setColumnValues(newXlsxFile, cols[7], "B")    //price
+	setColumnValues(newXlsxFile, cols[5], "C")    //Square
 	setColumnValues(newXlsxFile, []string{}, "D") //height
 	setColumnValues(newXlsxFile, cols[3], "E")    //type
 	setColumnValues(newXlsxFile, cols[2], "F")    //layout

@@ -7,7 +7,6 @@ import (
 	"genieMap/cmd"
 	_struct "genieMap/structures"
 	"github.com/xuri/excelize/v2"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -38,17 +37,21 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 		}
 	}()
 
-	setColumnValues(newXlsxFile, cols[2], "A")
-	setColumnValues(newXlsxFile, cols[11], "B")
-	setColumnValues(newXlsxFile, cols[10], "C")
-	setColumnValues(newXlsxFile, []string{}, "D")
-	setColumnValues(newXlsxFile, cols[4], "E")
-	setColumnValues(newXlsxFile, cols[5], "F")
-	setColumnValues(newXlsxFile, cols[6], "G")
+	setColumnValues(newXlsxFile, cols[2], "A")    //number
+	setColumnValues(newXlsxFile, cols[11], "B")   //price
+	setColumnValues(newXlsxFile, cols[10], "C")   //Square
+	setColumnValues(newXlsxFile, []string{}, "D") //height
+	setColumnValues(newXlsxFile, cols[4], "E")    //type
+	setColumnValues(newXlsxFile, cols[5], "F")    //layout
+	setColumnValues(newXlsxFile, cols[6], "G")    //views
 
 	ReplaceXLSXNumber(newXlsxFile, 0)
 	ReplaceXLSXLayout(newXlsxFile, 5)
 	ReplaceXLSXType(newXlsxFile, 4)
+	replaceUnitViewsFieldInXLSX(newXlsxFile, 6)
+	replaceUnitSquareFieldInXLSX(newXlsxFile, 2)
+	replaceUnitHeightFieldInXLSX(newXlsxFile, 3)
+	cmd.AddLastRowWithEmptyWord(newXlsxFile)
 
 	buf, err3 := convertXlsxToCsv(newXlsxFile)
 	if err3 != nil {
@@ -59,7 +62,7 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 
 	buffer, errFirstRow := cmd.UpdateFirstRowInCSV(buf, _struct.GetNameFirstRow())
 	if errFirstRow != nil {
-		LogError("Ошибка при добавлении строки", errFirstRow)
+		LogError("Ошибка при замене первой строки", errFirstRow)
 
 		return nil, errFirstRow
 	}
@@ -67,9 +70,51 @@ func DoBookCSV(path string) (*bytes.Buffer, error) {
 	return buffer, nil
 }
 
+func replaceUnitHeightFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					if cellValue == "" {
+						row[colIndex] = "Simplex"
+					}
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
 func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
-	//не забудь поменять значение word!!!!
-	// Получаем список имен листов из файла
 	sheets := file.GetSheetList()
 
 	// Обрабатываем каждый лист
@@ -122,6 +167,54 @@ func ReplaceXLSXLayout(file *excelize.File, indexOfCell int) error {
 	return nil
 }
 
+func replaceUnitSquareFieldInXLSX(file *excelize.File, indexOfCell int) error {
+	sheets := file.GetSheetList()
+
+	for _, sheet := range sheets {
+		rows, err := file.Rows(sheet)
+		if err != nil {
+			return err
+		}
+
+		rowIndex := 1
+
+		for rows.Next() {
+			row, err2 := rows.Columns()
+			if err2 != nil {
+				return err2
+			}
+
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
+				if cellValue == row[colIndex] {
+					feet, errToFeet := cmd.SquareMetersToSquareFeet(cellValue)
+
+					if errToFeet != nil {
+						return errToFeet
+					}
+
+					row[colIndex] = feet
+
+					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+					if err1 != nil {
+						return err1
+					}
+
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+					if err1 != nil {
+						return err1
+					}
+					break
+				}
+			}
+			rowIndex++
+		}
+	}
+
+	return nil
+}
+
 func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 	//не забудь поменять значение word!!!!
 	// Получаем список имен листов из файла
@@ -149,9 +242,14 @@ func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 
 			// Перебираем каждую ячейку в строке
 			for _, cellValue := range row {
-				if cellValue == row[colIndex] {
-					word := strings.Split(row[colIndex], "_")
-					row[colIndex] = word[len(word)-1]
+				if cellValue == row[colIndex] && cellValue != "EndUnitCode" {
+
+					word := strings.Split(row[colIndex], "-")
+					divisionByNumber := strings.Split(word[len(word)-3], "_")
+					row[colIndex] =
+						divisionByNumber[len(divisionByNumber)-1] +
+							word[len(word)-2] +
+							word[len(word)-1]
 
 					// Получаем имя столбца на основе индекса столбца
 					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
@@ -160,7 +258,7 @@ func ReplaceXLSXNumber(file *excelize.File, indexOfCell int) error {
 					}
 
 					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
+					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
 					if err1 != nil {
 						return err1
 					}
@@ -206,6 +304,10 @@ func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
 				if cellValue == row[colIndex] {
 					// Заменяем значение ячейки на замену
 					word := strings.ToLower(cellValue)
+					switch word {
+					case "apartment":
+						word = "Apartments"
+					}
 					row[colIndex] = word
 
 					// Получаем имя столбца на основе индекса столбца
@@ -231,10 +333,9 @@ func ReplaceXLSXType(file *excelize.File, indexOfCell int) error {
 	return nil
 }
 
-func ReplaceNumberXLSX(file *excelize.File) error {
+func replaceUnitViewsFieldInXLSX(file *excelize.File, indexOfCell int) error {
 	sheets := file.GetSheetList()
 
-	// Обрабатываем каждый лист
 	for _, sheet := range sheets {
 		rows, err := file.Rows(sheet)
 		if err != nil {
@@ -249,23 +350,47 @@ func ReplaceNumberXLSX(file *excelize.File) error {
 				return err2
 			}
 
-			for colIndex, cellValue := range row {
+			colIndex := indexOfCell
+
+			for _, cellValue := range row {
 				if cellValue == row[colIndex] {
-					word := strings.Split(row[colIndex], "_")
-					row[colIndex] = word[len(word)-1]
+					wordContains := strings.Contains(cellValue, "view")
+					wordContains1 := strings.Contains(cellValue, "View")
+					if wordContains == true || wordContains1 == true {
+						replaceWord := strings.ReplaceAll(cellValue, "view", "")
+						replaceWord = strings.ReplaceAll(replaceWord, "View", "")
+						replaceWordArray := strings.Split(replaceWord, "Street")
+						replaceWord = strings.Join(replaceWordArray, " Street")
+						replaceWordArray = strings.Split(replaceWord, "park")
+						replaceWord = strings.Join(replaceWordArray, " park")
 
-					// Получаем имя столбца на основе индекса столбца
-					columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
-					if err1 != nil {
-						return err1
-					}
+						row[colIndex] = replaceWord
 
-					// Обновляем значение ячейки в листе
-					err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), word[len(word)-1])
-					if err1 != nil {
-						return err1
+						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+						if err1 != nil {
+							return err1
+						}
+
+						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+						if err1 != nil {
+							return err1
+						}
+						break
+					} else {
+						row[colIndex] = ""
+
+						columnName, err1 := excelize.ColumnNumberToName(colIndex + 1)
+						if err1 != nil {
+							return err1
+						}
+
+						// Обновляем значение ячейки в листе
+						err1 = file.SetCellValue(sheet, columnName+strconv.Itoa(rowIndex), row[colIndex])
+						if err1 != nil {
+							return err1
+						}
+						break
 					}
-					break
 				}
 			}
 
@@ -275,21 +400,6 @@ func ReplaceNumberXLSX(file *excelize.File) error {
 	}
 
 	return nil
-}
-
-func downloadFile(url string) ([]byte, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	fileContent, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return fileContent, nil
 }
 
 func GetSheet(data *excelize.File, sheetName string) ([][]string, error) {
@@ -410,50 +520,4 @@ func convertXlsxToCsv(inputFile *excelize.File) (*bytes.Buffer, error) {
 	}
 
 	return buf, nil
-}
-
-func DownloadFileFromTelegramBot(token, fileID, filePath string) ([]byte, error) {
-	apiURL := fmt.Sprintf("https://api.telegram.org/bot%s/getFile?file_id=%s", token, fileID)
-	response, err := http.Get(apiURL)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось получить информацию о файле: %v", err)
-	}
-	defer response.Body.Close()
-
-	// Чтение ответа в формате JSON
-	// Здесь вам потребуется ваша собственная логика для извлечения информации о файле
-	// из ответа Telegram API, чтобы получить ссылку на файл
-
-	fileURL := "https://api.telegram.org/file/bot" + token + "/" + filePath
-
-	// Загрузка файла
-	fileResponse, err := http.Get(fileURL)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось загрузить файл: %v", err)
-	}
-	defer fileResponse.Body.Close()
-
-	// Чтение содержимого файла в []byte
-	fileContent, err := ioutil.ReadAll(fileResponse.Body)
-	if err != nil {
-		return nil, fmt.Errorf("не удалось прочитать содержимое файла: %v", err)
-	}
-
-	return fileContent, nil
-}
-
-func SaveXLSXFile(file *excelize.File, outputPath string) error {
-	if err := file.SaveAs(outputPath); err != nil {
-		return fmt.Errorf("не удалось сохранить файл XLSX: %v", err)
-	}
-	return nil
-}
-
-func GetDataFromBytes(fileContent []byte) *excelize.File {
-	buffer := bytes.NewBuffer(fileContent)
-	data, err := excelize.OpenReader(buffer)
-	if err != nil {
-		LogError("%v", err)
-	}
-	return data
 }

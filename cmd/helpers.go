@@ -8,6 +8,7 @@ import (
 	"github.com/xuri/excelize/v2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -20,9 +21,7 @@ func LoadEnv() {
 		panic(errGetWd)
 	}
 
-	if err := godotenv.Load(realPath + "/.env"); err != nil {
-		panic(err)
-	}
+	godotenv.Load(realPath + "/.env")
 }
 
 func ConvertXlsxToCsv(inputFile *excelize.File) (*bytes.Buffer, error) {
@@ -266,6 +265,7 @@ func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, 
 	}
 
 	reader := csv.NewReader(bytes.NewReader(content))
+	reader.FieldsPerRecord = -1
 
 	rows, err := reader.ReadAll()
 	if err != nil {
@@ -289,4 +289,153 @@ func UpdateFirstRowInCSV(buffer *bytes.Buffer, values []string) (*bytes.Buffer, 
 	writer.Flush()
 
 	return newBuffer, nil
+}
+
+func AddEmptyFirstLine(buffer *bytes.Buffer) (*bytes.Buffer, error) {
+	result := bytes.NewBuffer(nil)
+
+	_, err := fmt.Fprintln(result, "empty")
+
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = buffer.WriteTo(result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func DownloadFile(url string) ([]byte, error) {
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	fileContent, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileContent, nil
+}
+
+func GetData(fileContent []byte) *excelize.File {
+	buffer := bytes.NewBuffer(fileContent)
+	data, err := excelize.OpenReader(buffer)
+	if err != nil {
+		LogError("%v", err)
+	}
+	return data
+}
+
+func RemoveFirstRowFromExcelFile(file *excelize.File) error {
+	// Получаем список листов в файле
+	sheets := file.GetSheetList()
+
+	// Перебираем каждый лист
+	for _, sheet := range sheets {
+		// Получаем содержимое всех строк на листе
+		rows, err := file.GetRows(sheet)
+		if err != nil {
+			return err
+		}
+
+		// Удаляем первую строку путем создания нового среза без первой строки
+		newRows := rows[1:]
+
+		// Очищаем все строки на листе
+		for i := len(rows); i > 0; i-- {
+			err = file.RemoveRow(sheet, i)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Записываем обновленные строки на лист
+		for i, newRow := range newRows {
+			rowIndex := i + 1
+			for j, cellValue := range newRow {
+				colIndex, _ := excelize.ColumnNumberToName(j + 1)
+				cell := fmt.Sprintf("%s%d", colIndex, rowIndex)
+				err = file.SetCellValue(sheet, cell, cellValue)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func SquareMetersToSquareFeet(squareMeters string) (string, error) {
+	// Заменяем запятую на точку, если она есть в строке
+	squareMeters = replaceComma(squareMeters)
+
+	// Преобразуем строку с метрами квадратными во float64
+	meters, err := strconv.ParseFloat(squareMeters, 64)
+	if err != nil {
+		return "", err
+	}
+
+	// Выполняем пересчет в квадратные футы
+	feet := meters * 10.7639
+
+	// Форматируем результат как строку и возвращаем его
+	return fmt.Sprintf("%.2f", feet), nil
+}
+
+// Функция для замены запятой на точку в строке, если она есть
+func replaceComma(s string) string {
+	return strconv.FormatFloat(toFloat64(s), 'f', -1, 64)
+}
+
+// Вспомогательная функция для преобразования строки во float64
+func toFloat64(s string) float64 {
+	f, _ := strconv.ParseFloat(s, 64)
+	return f
+}
+
+//Primer ispolzovaniya(zadel pod novuu func)
+//sheetRowsToDelete := map[string]int{
+//	"Sheet1": 2,
+//	"Sheet2": 4,
+//}
+//
+//err := RemoveRowsFromExcelFile(file, sheetRowsToDelete)
+//if err != nil {
+//	// Обработка ошибки
+//	fmt.Println("Ошибка при удалении строк из файла:", err)
+//	return err
+//}
+
+func AddLastRowWithEmptyWord(f *excelize.File) error {
+	// Получаем номер последней строки в листе
+
+	sheetList := f.GetSheetList()
+
+	// Проходим по каждому листу и добавляем последнюю строку
+	for _, sheetName := range sheetList {
+
+		lastRow, err := f.GetRows(sheetName)
+		if err != nil {
+			return err
+		}
+
+		// Получаем номер следующей строки
+		nextRow := len(lastRow) + 1
+
+		// Добавляем новую строку
+		err = f.SetCellValue(sheetName, fmt.Sprintf("A%d", nextRow), "empty")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

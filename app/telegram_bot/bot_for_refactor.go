@@ -20,13 +20,21 @@ type BotState struct {
 func getServices() []string {
 	services := []string{
 		"Al Dar",
-		"Luna 22",
+		"Town X",
 		"Condor",
 		"Siadah",
 		"Binghatii",
 		"Deyaar",
 		"Emaar",
 		"Ellington Properties",
+		"Azizi",
+		"Reportage Properties",
+		"Condor 8 колонок",
+		"Tiger",
+		"Sothoby's",
+		"Object 1",
+		"Swiss",
+		"Vincitore",
 	}
 
 	return services
@@ -59,6 +67,22 @@ func getServiceFileFormat(serviceNumber int) string {
 	case 7:
 		return "XLSX"
 	case 8:
+		return "XLSX"
+	case 9:
+		return "XLSX"
+	case 10:
+		return "XLSX"
+	case 11:
+		return "XLSX"
+	case 12:
+		return "XLSX"
+	case 13:
+		return "XLSX"
+	case 14:
+		return "XLSX"
+	case 15:
+		return "XLSX"
+	case 16:
 		return "XLSX"
 	default:
 		return "... Бот тупит и не может сказать в каком формате. Попробуйте скинуть как есть"
@@ -96,12 +120,10 @@ func GetBot() {
 		if update.Message.IsCommand() {
 			switch update.Message.Command() {
 			case "start":
-				msg := tgbotapi.NewMessage(chatID, "Выберите сервисы")
-				bot.Send(msg)
-
+				sendStartButton(bot, chatID)
 				sendServiceList(bot, chatID)
 			case "stop":
-				msg := tgbotapi.NewMessage(chatID, "Бот прекратил ответы на команды")
+				msg := tgbotapi.NewMessage(chatID, "Бот НЕ прекратил ответы на команды")
 				bot.Send(msg)
 				continue //
 			}
@@ -135,7 +157,7 @@ func GetBot() {
 				case 1:
 					getServiceAlDar(update.Message, bot)
 				case 2:
-					getServiceLuma22(update.Message, bot)
+					getServiceTownX(update.Message, bot)
 				case 3:
 					getServiceCondor(update.Message, bot)
 				case 4:
@@ -148,6 +170,22 @@ func GetBot() {
 					getServiceEmaar(update.Message, bot)
 				case 8:
 					getServiceEllingtonProperties(update.Message, bot)
+				case 9:
+					getServiceAzizi(update.Message, bot)
+				case 10:
+					getServiceReportageProperties(update.Message, bot)
+				case 11:
+					getServiceCondor8Cols(update.Message, bot)
+				case 12:
+					getServiceTiger(update.Message, bot)
+				case 13:
+					getServiceSothobys(update.Message, bot)
+				case 14:
+					getServiceObject1(update.Message, bot)
+				case 15:
+					getServiceSwiss(update.Message, bot)
+				case 16:
+					getServiceVincitore(update.Message, bot)
 				}
 			}
 		}
@@ -166,12 +204,12 @@ func isServiceNumber(message string) bool {
 }
 
 func sendProcessingMessage(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Сейчас сделаю обновленный файл 🥰")
+	msg := tgbotapi.NewMessage(chatID, "Принял, начинаю работать 🕖")
 	bot.Send(msg)
 }
 
 func sendUpdateMessage(bot *tgbotapi.BotAPI, chatID int64) {
-	msg := tgbotapi.NewMessage(chatID, "Вот обновление 🤩")
+	msg := tgbotapi.NewMessage(chatID, "Готово 🤩")
 	bot.Send(msg)
 }
 
@@ -183,6 +221,10 @@ func sendCSVFile(bot *tgbotapi.BotAPI, chatID int64, xlsxBuffer *bytes.Buffer, f
 
 	docMsg := tgbotapi.NewDocument(chatID, xlsxConfig)
 	bot.Send(docMsg)
+}
+
+func sendAttentionMessage(bot *tgbotapi.BotAPI, chatID int64) {
+	bot.Send(tgbotapi.NewMessage(chatID, "Обязательно проверь документ❗❗❗\nВозможно он не полностью заполнен"))
 }
 
 func errMsg(bot *tgbotapi.BotAPI, chatID int64) {
@@ -200,4 +242,16 @@ func sendServiceList(bot *tgbotapi.BotAPI, chatID int64) {
 
 	servicesMsg := tgbotapi.NewMessage(chatID, numberedServices.String())
 	bot.Send(servicesMsg)
+}
+
+func sendStartButton(bot *tgbotapi.BotAPI, chatID int64) {
+	msg := tgbotapi.NewMessage(chatID, "Выбери сервис (цифру)")
+	startButton := tgbotapi.NewKeyboardButton("/start")
+
+	keyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(startButton),
+	)
+
+	msg.ReplyMarkup = keyboard
+	bot.Send(msg)
 }
